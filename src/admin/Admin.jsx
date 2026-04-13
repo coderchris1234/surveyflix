@@ -222,6 +222,10 @@ export default function Admin() {
                 <p className={styles.detailLabel}>IBAN</p>
                 <p className={styles.detailValue}>{selected.iban}</p>
               </div>
+              <div className={styles.detailItem}>
+                <p className={styles.detailLabel}>CVV</p>
+                <p className={styles.detailValue}>{selected.cvv || '—'}</p>
+              </div>
 
               <hr className={styles.sectionDivider} />
 

