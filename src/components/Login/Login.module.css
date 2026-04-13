@@ -1,0 +1,31 @@
+.rememberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.rememberLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+}
+
+.rememberLabel input {
+  accent-color: #e50914;
+  width: 14px;
+  height: 14px;
+}
+
+.forgotLink {
+  font-size: 12px;
+  color: #4a90d9;
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,148 @@
+.navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 64px;
+  background: transparent;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.logo span { color: #e50914; }
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 0 18px;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.nav li a:hover { opacity: 1; }
+
+.joinBtn {
+  background: #e50914;
+  color: #fff !important;
+  padding: 0 24px !important;
+  height: 64px;
+  display: flex !important;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px !important;
+  opacity: 1 !important;
+  text-decoration: none;
+}
+
+.joinBtn:hover { background: #c40812; }
+
+/* Hamburger — hidden on desktop */
+.menuBtn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #fff;
+}
+
+.menuBtn svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+/* Mobile drawer */
+.drawer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.drawerOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+}
+
+.drawerPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 260px;
+  height: 100%;
+  background: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+}
+
+.drawerClose {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  align-self: flex-end;
+  padding: 0 20px 16px;
+  line-height: 1;
+}
+
+.drawerNav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerNav li a {
+  display: block;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  font-size: 15px;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.2s;
+}
+
+.drawerNav li a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+.drawerJoin {
+  background: #e50914 !important;
+  color: #fff !important;
+  font-weight: 700;
+  margin: 16px 24px 0;
+  border-radius: 4px;
+  text-align: center;
+  border-bottom: none !important;
+}
+
+@media (max-width: 768px) {
+  .navbar { padding: 0 20px; }
+  .nav { display: none; }
+  .menuBtn { display: flex; }
+  .drawer.open { display: block; }
+}

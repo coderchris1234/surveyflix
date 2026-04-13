@@ -1,0 +1,142 @@
+.section {
+  background: #f5f5f5;
+  padding: 60px 40px;
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* ── Left: Top Fan card ── */
+.topFan {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px 20px;
+  min-width: 260px;
+  max-width: 280px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  flex-shrink: 0;
+}
+
+.topFanTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 4px;
+}
+
+.topFanMonth {
+  font-size: 12px;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.congrats {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e50914;
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+.fanList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.fanItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e50914;
+  border-radius: 4px;
+  padding: 6px 12px 6px 6px;
+}
+
+.fanAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #bbb;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.fanFlag {
+  width: 22px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.fanName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+}
+
+/* ── Right: facts ── */
+.right { flex: 1; }
+
+.factsTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  margin: 0 0 40px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 36px;
+  column-gap: 20px;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+  margin: 0 0 6px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .section { flex-direction: column; align-items: stretch; }
+  .topFan { max-width: 100%; min-width: unset; }
+  .statsGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .section { padding: 40px 16px; gap: 28px; }
+  .factsTitle { font-size: 22px; margin-bottom: 24px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
+  .statValue { font-size: 24px; }
+}

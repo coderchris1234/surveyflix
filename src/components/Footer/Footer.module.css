@@ -1,0 +1,82 @@
+.footer {
+  background: #1a1a1a;
+  color: #aaa;
+  padding: 48px 60px 24px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 32px;
+  border-bottom: 1px solid #333;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.brand .logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.brand .logo span { color: #e50914; }
+
+.brand p {
+  font-size: 13px;
+  margin: 10px 0 0;
+  max-width: 240px;
+  line-height: 1.6;
+}
+
+.links {
+  display: flex;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.col h4 {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  letter-spacing: 0.5px;
+}
+
+.col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.col ul li a,
+.col ul li a:where(:link, :visited) {
+  color: #aaa;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.col ul li a:hover { color: #fff; }
+
+.bottom {
+  padding-top: 20px;
+  font-size: 12px;
+  text-align: center;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .footer { padding: 40px 24px 20px; }
+  .top { flex-direction: column; gap: 32px; }
+  .brand p { max-width: 100%; }
+  .links { gap: 32px; }
+}
+
+@media (max-width: 480px) {
+  .footer { padding: 32px 16px 16px; }
+  .links { flex-direction: column; gap: 24px; }
+}
