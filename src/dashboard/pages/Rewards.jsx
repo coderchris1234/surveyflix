@@ -20,6 +20,9 @@ export default function Rewards({ points }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    // ensure all fields are filled (belt-and-suspenders on top of HTML required)
+    const allFilled = Object.values(form).every(v => v.trim() !== '')
+    if (!allFilled) return
     setSubmitted(true)
   }
 

@@ -7,8 +7,9 @@
 .image {
   width: 50%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
   display: block;
+  image-rendering: auto;
 }
 
 .content {

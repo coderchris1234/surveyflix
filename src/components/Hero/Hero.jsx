@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import heroImg from '../../assets/hero.png'
 import styles from './Hero.module.css'
 
 export default function Hero() {
   return (
     <section className={styles.hero}>
-      <img src={heroImg} alt="" className={styles.bgImage} />
+      <img src="/hero.jpeg" alt="" className={styles.bgImage} />
       <div className={styles.overlay} />
       <div className={styles.content}>
         <p className={styles.eyebrow}>surveyflix</p>

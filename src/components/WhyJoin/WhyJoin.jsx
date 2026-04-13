@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
-import heroImg from '../../assets/hero.png'
 import styles from './WhyJoin.module.css'
 
 export default function WhyJoin() {
   return (
     <section className={styles.section}>
-      <img src={heroImg} alt="Person smiling at laptop" className={styles.image} />
+      <img src="/section1.jpeg" alt="Person smiling at laptop" className={styles.image} />
       <div className={styles.content}>
         <h2 className={styles.title}>Why join our panel</h2>
         <p className={styles.description}>

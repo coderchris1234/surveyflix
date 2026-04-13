@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import heroImg from '../../assets/hero.png'
 import styles from './ValueOpinion.module.css'
 
 const steps = ['Login your account', 'Submit topics', 'Participate in the debate']
@@ -23,7 +22,7 @@ export default function ValueOpinion() {
         </ul>
         <Link to="/login" className={styles.cta}>Login to Continue</Link>
       </div>
-      <img src={heroImg} alt="People collaborating at a table" className={styles.image} />
+      <img src="/section2.jpeg" alt="People collaborating at a table" className={styles.image} />
     </section>
   )
 }

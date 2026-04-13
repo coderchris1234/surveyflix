@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MdEmail, MdLock } from 'react-icons/md'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
-import heroImg from '../../assets/hero.png'
 import s from './SignUp.module.css'
 
 const countries = [
@@ -37,7 +36,7 @@ export default function SignUp() {
   return (
     <div className={s.page}>
       <div className={s.left}>
-        <img src={heroImg} alt="" className={s.bgImage} />
+        <img src="/hero.jpeg" alt="" className={s.bgImage} />
         <div className={s.leftOverlay} />
         <div className={s.leftContent}>
           <h2 className={s.leftTitle}>Take surveys &amp; earn</h2>
