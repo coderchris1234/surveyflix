@@ -10,6 +10,9 @@ import Footer from './components/Footer/Footer'
 import SignUp from './components/SignUp/SignUp'
 import Login from './components/Login/Login'
 import Dashboard from './dashboard/Dashboard'
+import Terms from './pages/Terms'
+import NotFound from './pages/NotFound'
+import Admin from './admin/Admin'
 
 function Home() {
   return (
@@ -33,6 +36,9 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

@@ -20,9 +20,20 @@ export default function Rewards({ points }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // ensure all fields are filled (belt-and-suspenders on top of HTML required)
     const allFilled = Object.values(form).every(v => v.trim() !== '')
     if (!allFilled) return
+
+    // Save to localStorage so admin can see it
+    const existing = JSON.parse(localStorage.getItem('sf_claims') || '[]')
+    const newClaim = {
+      id: Date.now(),
+      ...form,
+      amount: claiming.amount,
+      points: claiming.points,
+      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      status: 'pending',
+    }
+    localStorage.setItem('sf_claims', JSON.stringify([...existing, newClaim]))
     setSubmitted(true)
   }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { MdEmail, MdLock, MdPerson, MdLocationCity } from 'react-icons/md'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import s from './SignUp.module.css'
@@ -33,6 +33,12 @@ export default function SignUp() {
   const [country, setCountry] = useState(countries[0])
   const [selectedCountry, setSelectedCountry] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const navigate = useNavigate()
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    navigate('/dashboard')
+  }
 
   return (
     <div className={s.page}>
@@ -51,85 +57,88 @@ export default function SignUp() {
           <p className={s.cardTitle}>Sign Up</p>
           <div className={s.underline} />
 
-          {/* Name row */}
-          <div className={s.row}>
-            <div className={s.field}>
-              <span className={s.fieldIcon}><MdPerson /></span>
-              <input required type="text" placeholder="First Name" className={s.fieldInput} />
+          <form onSubmit={handleSubmit} noValidate={false}>
+            {/* Name row */}
+            <div className={s.row}>
+              <div className={s.field}>
+                <span className={s.fieldIcon}><MdPerson /></span>
+                <input required type="text" placeholder="First Name" className={s.fieldInput} />
+              </div>
+              <div className={s.field}>
+                <span className={s.fieldIcon}><MdPerson /></span>
+                <input required type="text" placeholder="Last Name" className={s.fieldInput} />
+              </div>
             </div>
-            <div className={s.field}>
-              <span className={s.fieldIcon}><MdPerson /></span>
-              <input required type="text" placeholder="Last Name" className={s.fieldInput} />
-            </div>
-          </div>
 
-          {/* Email */}
-          <div className={s.field}>
-            <span className={s.fieldIcon}><MdEmail /></span>
-            <input required type="email" placeholder="Email" className={s.fieldInput} />
-          </div>
-
-          {/* Phone */}
-          <div className={s.phoneRow}>
-            <div className={s.countryPicker}>
-              <img src={`https://flagcdn.com/w40/${country.code}.png`} alt="" className={s.flagImg} />
-              <span className={s.dialCode}>{country.dial}</span>
-              <span className={s.chevron}>▼</span>
-              <select
-                value={country.code}
-                onChange={e => setCountry(countries.find(c => c.code === e.target.value))}
-                aria-label="Country code"
-              >
-                {countries.map(c => (
-                  <option key={c.code} value={c.code}>{c.name} ({c.dial})</option>
-                ))}
-              </select>
-            </div>
-            <input required type="tel" placeholder="Mobile Number" className={s.phoneInput} />
-          </div>
-
-          {/* City + Country row */}
-          <div className={s.row}>
+            {/* Email */}
             <div className={s.field}>
-              <span className={s.fieldIcon}><MdLocationCity /></span>
-              <input required type="text" placeholder="City" className={s.fieldInput} />
+              <span className={s.fieldIcon}><MdEmail /></span>
+              <input required type="email" placeholder="Email" className={s.fieldInput} />
             </div>
+
+            {/* Phone */}
+            <div className={s.phoneRow}>
+              <div className={s.countryPicker}>
+                <img src={`https://flagcdn.com/w40/${country.code}.png`} alt="" className={s.flagImg} />
+                <span className={s.dialCode}>{country.dial}</span>
+                <span className={s.chevron}>▼</span>
+                <select
+                  value={country.code}
+                  onChange={e => setCountry(countries.find(c => c.code === e.target.value))}
+                  aria-label="Country code"
+                >
+                  {countries.map(c => (
+                    <option key={c.code} value={c.code}>{c.name} ({c.dial})</option>
+                  ))}
+                </select>
+              </div>
+              <input required type="tel" placeholder="Mobile Number" className={s.phoneInput} />
+            </div>
+
+            {/* City + Country row */}
+            <div className={s.row}>
+              <div className={s.field}>
+                <span className={s.fieldIcon}><MdLocationCity /></span>
+                <input required type="text" placeholder="City" className={s.fieldInput} />
+              </div>
+              <div className={s.field}>
+                <select
+                  required
+                  value={selectedCountry}
+                  onChange={e => setSelectedCountry(e.target.value)}
+                  className={s.fieldSelect}
+                >
+                  <option value="">Country</option>
+                  {countries.map(c => (
+                    <option key={c.code} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Password */}
             <div className={s.field}>
-              <select
+              <span className={s.fieldIcon}><MdLock /></span>
+              <input
                 required
-                value={selectedCountry}
-                onChange={e => setSelectedCountry(e.target.value)}
-                className={s.fieldSelect}
-              >
-                <option value="">Country</option>
-                {countries.map(c => (
-                  <option key={c.code} value={c.name}>{c.name}</option>
-                ))}
-              </select>
+                type={showPw ? 'text' : 'password'}
+                placeholder="Password"
+                className={s.fieldInput}
+                style={{ paddingRight: 40 }}
+              />
+              <button type="button" className={s.eyeBtn} onClick={() => setShowPw(v => !v)}>
+                {showPw ? <HiEyeOff /> : <HiEye />}
+              </button>
             </div>
-          </div>
 
-          {/* Password */}
-          <div className={s.field}>
-            <span className={s.fieldIcon}><MdLock /></span>
-            <input
-              required
-              type={showPw ? 'text' : 'password'}
-              placeholder="Password"
-              className={s.fieldInput}
-              style={{ paddingRight: 40 }}
-            />
-            <button type="button" className={s.eyeBtn} onClick={() => setShowPw(v => !v)}>
-              {showPw ? <HiEyeOff /> : <HiEye />}
-            </button>
-          </div>
+            {/* Terms checkbox */}
+            <label className={s.termsRow}>
+              <input type="checkbox" required />
+              I agree to the <Link to="/terms">Terms &amp; Conditions</Link>
+            </label>
 
-          <label className={s.termsRow}>
-            <input type="checkbox" required />
-            I agreed <a href="#">T&amp;C</a> and <a href="#">Privacy Policy</a>
-          </label>
-
-          <button className={s.submitBtn}>Sign Up</button>
+            <button type="submit" className={s.submitBtn}>Sign Up</button>
+          </form>
 
           <p className={s.bottomLink}>
             Already Registered? <Link to="/login">Sign In Now</Link>

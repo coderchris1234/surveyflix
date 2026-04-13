@@ -1,0 +1,158 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f4f6f9;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  padding: 24px;
+  text-align: center;
+}
+
+.illustration {
+  position: relative;
+  width: 320px;
+  height: 220px;
+  margin-bottom: 40px;
+}
+
+/* Big 404 text as background */
+.bigNum {
+  font-size: 160px;
+  font-weight: 900;
+  color: #f0f0f0;
+  line-height: 1;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+  letter-spacing: -8px;
+}
+
+/* Astronaut floating over the numbers */
+.astronaut {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 90px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-16px); }
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 12px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #888;
+  margin: 0 0 36px;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primaryBtn {
+  background: #e50914;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 28px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.primaryBtn:hover { background: #c40812; }
+
+.secondaryBtn {
+  background: #fff;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 13px 28px;
+  border-radius: 8px;
+  border: 1.5px solid #e0e0e0;
+  transition: border-color 0.2s;
+}
+
+.secondaryBtn:hover { border-color: #aaa; }
+
+.logo {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo span { color: #e50914; }
+
+@media (max-width: 480px) {
+  .page {
+    padding: 80px 20px 32px;
+    justify-content: flex-start;
+  }
+
+  .illustration {
+    width: 240px;
+    height: 160px;
+    margin-bottom: 28px;
+  }
+
+  .bigNum {
+    font-size: 120px;
+    letter-spacing: -4px;
+  }
+
+  .astronaut {
+    font-size: 64px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
+    text-align: center;
+    padding: 14px;
+  }
+
+  .logo {
+    font-size: 18px;
+    top: 24px;
+  }
+}

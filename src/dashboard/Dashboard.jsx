@@ -3,8 +3,8 @@ import DashboardLayout from './layout/DashboardLayout'
 import Overview from './pages/Overview'
 import Surveys from './pages/Surveys'
 import Rewards from './pages/Rewards'
-import History from './pages/History'
-import Profile from './pages/Profile'
+// import History from './pages/History'
+// import Profile from './pages/Profile'
 
 const INITIAL_POINTS = 23500
 
@@ -23,8 +23,8 @@ export default function Dashboard() {
       {page === 'overview' && <Overview points={points} onNavigate={setPage} />}
       {page === 'surveys'  && <Surveys onEarn={handleEarn} completedIds={completedIds} />}
       {page === 'rewards'  && <Rewards points={points} />}
-      {page === 'history'  && <History />}
-      {page === 'profile'  && <Profile />}
+      {/* {page === 'history'  && <History />} */}
+      {/* {page === 'profile'  && <Profile />} */}
     </DashboardLayout>
   )
 }
