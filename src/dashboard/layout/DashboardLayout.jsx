@@ -1,3 +1,27 @@
+/**
+ * DashboardLayout.jsx — Shared dashboard shell
+ *
+ * Provides the visual frame for all dashboard pages:
+ *   - Sidebar with navigation links (desktop: always visible, mobile: slide-in drawer)
+ *   - Topbar with page title and live points badge
+ *   - Content area where the active page renders via {children}
+ *
+ * Props:
+ *   activePage  — string ID of the current page (used to highlight the active nav item)
+ *   onNavigate  — function called when a nav item is clicked, updates page in Dashboard.jsx
+ *   points      — current point balance shown in the topbar badge
+ *   children    — the active page component rendered inside the content area
+ *
+ * Mobile behaviour:
+ *   On screens ≤768px the sidebar is hidden off-screen.
+ *   The hamburger button (☰) in the topbar sets drawerOpen=true, sliding it in.
+ *   Clicking the dark overlay behind the drawer closes it.
+ *
+ * To add a new nav item:
+ *   1. Add an entry to the navItems array with a unique id, label, and SVG icon
+ *   2. Add the id → title mapping in pageTitles
+ *   3. Add the corresponding page render in Dashboard.jsx
+ */
 import { useState } from 'react'
 import styles from './DashboardLayout.module.css'
 
@@ -14,16 +38,19 @@ const navItems = [
     id: 'rewards', label: 'Gift Cards',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
   },
+  // Uncomment to re-enable Points History in the sidebar
   // {
   //   id: 'history', label: 'Points History',
   //   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
   // },
+  // Uncomment to re-enable My Profile in the sidebar
   // {
   //   id: 'profile', label: 'My Profile',
   //   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
   // },
 ]
 
+// Maps page IDs to the title shown in the topbar
 const pageTitles = {
   overview: 'Dashboard Overview',
   surveys: 'Available Surveys',
@@ -35,6 +62,7 @@ const pageTitles = {
 export default function DashboardLayout({ activePage, onNavigate, points, children }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  // Close drawer after navigation on mobile
   const navigate = (id) => {
     onNavigate(id)
     setDrawerOpen(false)
@@ -42,12 +70,13 @@ export default function DashboardLayout({ activePage, onNavigate, points, childr
 
   return (
     <div className={styles.layout}>
-      {/* Mobile overlay */}
+      {/* Dark overlay shown behind the mobile drawer — clicking it closes the drawer */}
       <div
         className={`${styles.drawerOverlay} ${drawerOpen ? styles.open : ''}`}
         onClick={() => setDrawerOpen(false)}
       />
 
+      {/* Sidebar — sticky on desktop, slide-in drawer on mobile */}
       <aside className={`${styles.sidebar} ${drawerOpen ? styles.open : ''}`}>
         <div className={styles.sidebarLogo}>surv<span>e</span>yflix</div>
         <ul className={styles.nav}>
@@ -63,6 +92,7 @@ export default function DashboardLayout({ activePage, onNavigate, points, childr
             </li>
           ))}
         </ul>
+        {/* Hardcoded user info — replace with real auth user data when backend is added */}
         <div className={styles.sidebarFooter}>
           <div className={styles.userInfo}>
             <div className={styles.avatar}>S</div>
@@ -75,6 +105,7 @@ export default function DashboardLayout({ activePage, onNavigate, points, childr
       </aside>
 
       <div className={styles.main}>
+        {/* Topbar: hamburger (mobile only), page title, live points badge */}
         <div className={styles.topbar}>
           <div className={styles.topbarLeft}>
             <button className={styles.menuBtn} onClick={() => setDrawerOpen(o => !o)} aria-label="Toggle menu">
@@ -91,6 +122,7 @@ export default function DashboardLayout({ activePage, onNavigate, points, childr
             {points.toLocaleString()} pts
           </div>
         </div>
+        {/* Active page renders here */}
         <div className={styles.content}>{children}</div>
       </div>
     </div>

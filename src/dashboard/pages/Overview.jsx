@@ -13,7 +13,7 @@ const recentActivity = [
   { name: 'Food & Lifestyle Poll', date: 'Apr 5, 2026',  pts: '+60' },
 ]
 
-export default function Overview({ points, onNavigate }) {
+export default function Overview({ points }) {
   const nextTier = GIFT_TIERS.find(t => t.points > points) || GIFT_TIERS[GIFT_TIERS.length - 1]
   const prevTier = GIFT_TIERS.filter(t => t.points <= points).pop()
   const base = prevTier ? prevTier.points : 0

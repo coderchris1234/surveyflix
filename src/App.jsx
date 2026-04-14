@@ -1,3 +1,22 @@
+/**
+ * App.jsx — Root routing configuration
+ *
+ * This file defines ALL the pages/routes in the application.
+ * react-router-dom's <Routes> and <Route> components map URL paths
+ * to the correct page component.
+ *
+ * Route map:
+ *   /           → Home (landing page with all sections)
+ *   /signup     → SignUp page
+ *   /login      → Login page
+ *   /dashboard  → User dashboard (surveys, rewards, overview)
+ *   /terms      → Terms & Conditions page
+ *   /admin      → Admin panel (gift card claim management)
+ *   *           → NotFound (catches any unknown URL)
+ *
+ * The Home component is defined here (not in its own file) because it's
+ * just a simple stack of landing page sections.
+ */
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar/Navbar'
 import Hero from './components/Hero/Hero'
@@ -14,6 +33,7 @@ import Terms from './pages/Terms'
 import NotFound from './pages/NotFound'
 import Admin from './admin/Admin'
 
+// Home assembles all the landing page sections in order
 function Home() {
   return (
     <>
@@ -38,6 +58,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/admin" element={<Admin />} />
+      {/* Catch-all: any URL not matched above shows the 404 page */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
