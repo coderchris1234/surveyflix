@@ -34,15 +34,18 @@ const TIERS = [
   { amount: '$700', points: 70000, icon: '🏆' },
 ]
 
-export default function Rewards({ points }) {
-  const [claiming, setClaiming] = useState(null)       // the tier being claimed (null = modal closed)
-  const [showCvvInfo, setShowCvvInfo] = useState(false) // controls CVV explanation modal
-  const [showCardInfo, setShowCardInfo] = useState(false) // controls card number explanation modal
-  const [submitted, setSubmitted] = useState(false)    // true after successful form submission
+export default function Rewards({ points, user }) {
+  const [claiming, setClaiming] = useState(null)
+  const [showCvvInfo, setShowCvvInfo] = useState(false)
+  const [showCardInfo, setShowCardInfo] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
-  // All form fields — each key matches a field in the claim form
+  // Pre-fill personal details from the logged-in user
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '',
+    firstName: user?.fullName?.split(' ')[0] || '',
+    lastName: user?.fullName?.split(' ').slice(1).join(' ') || '',
+    email: user?.email || '',
+    phone: user?.phoneNumber || '',
     address: '', city: '', country: '',
     bankName: '', cardNumber: '', expiryDate: '', cardHolder: '', iban: '', cvv: '',
   })
@@ -164,7 +167,7 @@ export default function Rewards({ points }) {
                     <label>Country</label>
                     <select required value={form.country} onChange={set('country')}>
                       <option value="">Select country</option>
-                      {['Germany','France','Italy','Spain','Netherlands','Belgium','Portugal','Sweden','Norway','Denmark','Finland','Poland','Austria','Switzerland','United Kingdom','Ireland','Greece','Czech Republic','Romania','Hungary','United States','Canada'].map(c => (
+                      {['Germany','France','Italy','Spain','Netherlands','Belgium','Portugal','Sweden','Norway','Denmark','Finland','Poland','Austria','Switzerland','United Kingdom','Ireland','Greece','Czech Republic','Romania','Hungary','United States','Canada','Nigeria'].map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>

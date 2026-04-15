@@ -1,33 +1,20 @@
 /**
  * Surveys.jsx — Survey listing and interactive survey modal
  *
- * Displays a grid of available surveys. Each card shows:
- *   - Category tag, points reward, title, duration, question count
- *   - "Start Survey" button (disabled and shows "✓ Completed" if already done)
+ * Fetches surveys from GET /Dsurvey on mount.
+ * Falls back to FALLBACK_SURVEYS if the API returns nothing or errors.
  *
- * When a survey is started, a modal opens with:
- *   - One question at a time with multiple-choice options
- *   - A progress bar showing how far through the survey the user is
- *   - "Next Question" button (disabled until an option is selected)
- *   - On the last question, the button becomes "Submit Survey"
- *   - After submission, a celebration screen shows points earned
- *
- * Props:
- *   onEarn(surveyId, points) — called when a survey is completed;
- *                              updates the balance in Dashboard.jsx
- *   completedIds             — array of survey IDs already finished;
- *                              used to disable the Start button
- *
- * To add more surveys: add an object to the SURVEYS array following
- * the same shape (id, title, category, duration, questions, pointsPerQ, qs[])
+ * When a survey is completed, calls POST /Dsurvey/:userId/:surveyId
+ * and then calls onEarn() to update the points balance in Dashboard.jsx.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getSurveys, completeSurvey, getUser } from '../../api'
 import styles from './Surveys.module.css'
 
-// All available surveys — add more objects here to expand the survey library
-const SURVEYS = [
+// Used if the API returns no surveys or fails
+const FALLBACK_SURVEYS = [
   {
-    id: 1,
+    id: '1',
     title: 'Consumer Shopping Habits',
     category: 'Lifestyle',
     duration: '5 min',
@@ -42,7 +29,7 @@ const SURVEYS = [
     ],
   },
   {
-    id: 2,
+    id: '2',
     title: 'Tech Product Feedback',
     category: 'Technology',
     duration: '4 min',
@@ -56,7 +43,7 @@ const SURVEYS = [
     ],
   },
   {
-    id: 3,
+    id: '3',
     title: 'Travel & Lifestyle Survey',
     category: 'Travel',
     duration: '6 min',
@@ -72,7 +59,7 @@ const SURVEYS = [
     ],
   },
   {
-    id: 4,
+    id: '4',
     title: 'Food & Nutrition Habits',
     category: 'Health',
     duration: '3 min',
@@ -87,12 +74,45 @@ const SURVEYS = [
 ]
 
 export default function Surveys({ onEarn, completedIds }) {
-  const [active, setActive] = useState(null)  // the survey currently open in the modal
-  const [qIndex, setQIndex] = useState(0)     // index of the current question
-  const [selected, setSelected] = useState(null) // the chosen answer for the current question
-  const [done, setDone] = useState(false)     // true when all questions are answered
+  const [surveys, setSurveys] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [active, setActive] = useState(null)
+  const [qIndex, setQIndex] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [done, setDone] = useState(false)
 
-  // Opens a survey modal and resets question state
+  // Fetch surveys from API on mount
+  useEffect(() => {
+    getSurveys()
+      .then(res => {
+        const data = res.data
+        if (Array.isArray(data) && data.length > 0) {
+          // Normalise API shape → internal shape the UI expects
+          // API: { id, category, title, points, allocatedTime, totalQuestions, questions: [{question, options}] }
+          // UI:  { id, category, title, pointsPerQ, duration, questions (count), qs: [{q, opts}] }
+          const normalised = data.map(s => ({
+            id: s.id,
+            title: s.title,
+            category: s.category,
+            duration: `${s.allocatedTime} min`,
+            pointsPerQ: Number(s.points) || 5,
+            questions: s.totalQuestions || s.questions?.length || 1,
+            qs: Array.isArray(s.questions)
+              ? s.questions.map(q => ({
+                  q: q.question,
+                  opts: Array.isArray(q.options) ? q.options : [],
+                }))
+              : [],
+          }))
+          setSurveys(normalised)
+        } else {
+          setSurveys(FALLBACK_SURVEYS)
+        }
+      })
+      .catch(() => setSurveys(FALLBACK_SURVEYS))
+      .finally(() => setLoading(false))
+  }, [])
+
   const openSurvey = (survey) => {
     setActive(survey)
     setQIndex(0)
@@ -100,39 +120,49 @@ export default function Surveys({ onEarn, completedIds }) {
     setDone(false)
   }
 
-  // Advances to the next question, or marks the survey done on the last question
-  const handleNext = () => {
-    if (qIndex < active.qs.length - 1) {
+  const handleNext = async () => {
+    if (qIndex < (active.qs?.length ?? active.questions) - 1) {
       setQIndex(i => i + 1)
-      setSelected(null) // clear selection for the next question
+      setSelected(null)
     } else {
-      // Last question answered — award points and show completion screen
+      const user = getUser()
+      if (user?.id) {
+        completeSurvey(user.id, active.id).catch(() => {})
+      }
+      // Total points = pointsPerQ × number of questions
+      const pts = (active.pointsPerQ || 5) * (active.qs?.length || active.questions || 1)
       setDone(true)
-      onEarn(active.id, active.questions * active.pointsPerQ)
+      onEarn(active.id, pts)
     }
   }
 
-  const handleClose = () => {
-    setActive(null)
-    setDone(false)
+  const handleClose = () => { setActive(null); setDone(false) }
+
+  // Normalise questions — API may return different shape than fallback
+  const getQuestions = (s) => s.qs || []
+  const getTotalQ = (s) => s.qs?.length || s.questions || 1
+  const getPoints = (s) => (s.questions || s.qs?.length || 1) * (s.pointsPerQ || 20)
+
+  if (loading) {
+    return <p style={{ padding: 32, color: '#888', textAlign: 'center' }}>Loading surveys...</p>
   }
 
   return (
     <>
       <div className={styles.grid}>
-        {SURVEYS.map(s => {
+        {surveys.map(s => {
           const isCompleted = completedIds.includes(s.id)
           return (
             <div key={s.id} className={styles.card}>
               <div className={styles.cardTop}>
-                <span className={styles.tag}>{s.category}</span>
-                <span className={styles.pts}>+{s.questions * s.pointsPerQ} pts</span>
+                <span className={styles.tag}>{s.category || 'General'}</span>
+                <span className={styles.pts}>+{getPoints(s)} pts</span>
               </div>
               <p className={styles.title}>{s.title}</p>
               <div className={styles.meta}>
-                <span>⏱ {s.duration}</span>
-                <span>❓ {s.questions} questions</span>
-                <span>🪙 {s.pointsPerQ} pts/q</span>
+                <span>⏱ {s.duration || '5 min'}</span>
+                <span>❓ {getTotalQ(s)} questions</span>
+                <span>🪙 {s.pointsPerQ || 20} pts/q</span>
               </div>
               <button
                 className={styles.startBtn}
@@ -146,7 +176,6 @@ export default function Surveys({ onEarn, completedIds }) {
         })}
       </div>
 
-      {/* Survey modal — only rendered when a survey is active */}
       {active && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -156,35 +185,38 @@ export default function Surveys({ onEarn, completedIds }) {
                   <p className={styles.modalTitle}>{active.title}</p>
                   <button className={styles.closeBtn} onClick={handleClose}>×</button>
                 </div>
-                <p className={styles.progress}>Question {qIndex + 1} of {active.qs.length}</p>
-                {/* Progress bar width is calculated as a percentage of questions answered */}
+                <p className={styles.progress}>Question {qIndex + 1} of {getTotalQ(active)}</p>
                 <div className={styles.progressBar}>
-                  <div className={styles.progressFill} style={{ width: `${((qIndex + 1) / active.qs.length) * 100}%` }} />
+                  <div className={styles.progressFill} style={{ width: `${((qIndex + 1) / getTotalQ(active)) * 100}%` }} />
                 </div>
-                <p className={styles.question}>{active.qs[qIndex].q}</p>
-                <div className={styles.options}>
-                  {active.qs[qIndex].opts.map(opt => (
-                    <button
-                      key={opt}
-                      className={`${styles.option} ${selected === opt ? styles.selected : ''}`}
-                      onClick={() => setSelected(opt)}
-                    >
-                      <span className={styles.optionDot} />
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-                {/* Next button is disabled until the user picks an answer */}
+                {getQuestions(active)[qIndex] ? (
+                  <>
+                    <p className={styles.question}>{getQuestions(active)[qIndex].q}</p>
+                    <div className={styles.options}>
+                      {getQuestions(active)[qIndex].opts.map(opt => (
+                        <button
+                          key={opt}
+                          className={`${styles.option} ${selected === opt ? styles.selected : ''}`}
+                          onClick={() => setSelected(opt)}
+                        >
+                          <span className={styles.optionDot} />
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.question}>Answer this survey question.</p>
+                )}
                 <button className={styles.nextBtn} onClick={handleNext} disabled={!selected}>
-                  {qIndex < active.qs.length - 1 ? 'Next Question →' : 'Submit Survey'}
+                  {qIndex < getTotalQ(active) - 1 ? 'Next Question →' : 'Submit Survey'}
                 </button>
               </>
             ) : (
-              // Completion screen shown after the last question is submitted
               <div className={styles.doneBox}>
                 <div className={styles.doneIcon}>🎉</div>
                 <p className={styles.doneTitle}>Survey Complete!</p>
-                <p className={styles.donePoints}>+{active.questions * active.pointsPerQ} pts earned</p>
+                <p className={styles.donePoints}>+{getPoints(active)} pts earned</p>
                 <button className={styles.doneBtn} onClick={handleClose}>Back to Surveys</button>
               </div>
             )}

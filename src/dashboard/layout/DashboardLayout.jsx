@@ -59,14 +59,21 @@ const pageTitles = {
   // profile: 'My Profile',
 }
 
-export default function DashboardLayout({ activePage, onNavigate, points, children }) {
+export default function DashboardLayout({ activePage, onNavigate, points, user, onLogout, children }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // Close drawer after navigation on mobile
   const navigate = (id) => {
     onNavigate(id)
     setDrawerOpen(false)
   }
+
+  // Get initials from user's full name for the avatar circle
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U'
+
+  // Display name — use fullName, fall back to email
+  const displayName = user?.fullName || user?.email || 'User'
 
   return (
     <div className={styles.layout}>
@@ -92,15 +99,29 @@ export default function DashboardLayout({ activePage, onNavigate, points, childr
             </li>
           ))}
         </ul>
-        {/* Hardcoded user info — replace with real auth user data when backend is added */}
+        {/* Sidebar footer: real user info + logout */}
         <div className={styles.sidebarFooter}>
           <div className={styles.userInfo}>
-            <div className={styles.avatar}>S</div>
-            <div>
-              <div className={styles.userName}>Sophie M.</div>
-              <div className={styles.userRole}>Panel Member</div>
+            <div className={styles.avatar}>{initials}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className={styles.userName} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {displayName}
+              </div>
+              <div className={styles.userRole}>{user?.email || 'Panel Member'}</div>
             </div>
           </div>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              style={{
+                marginTop: 12, width: '100%', background: 'rgba(229,9,20,0.15)',
+                color: '#e50914', border: 'none', borderRadius: 6, padding: '8px 0',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Sign Out
+            </button>
+          )}
         </div>
       </aside>
 

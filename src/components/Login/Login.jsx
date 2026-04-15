@@ -2,16 +2,34 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MdEmail, MdLock } from 'react-icons/md'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
+import { login, saveUser } from '../../api'
 import s from '../SignUp/SignUp.module.css'
-import ls from './Login.module.css'
 
 export default function Login() {
   const [showPw, setShowPw] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    navigate('/dashboard')
+    setError('')
+    setLoading(true)
+
+    const fd = new FormData(e.target)
+    try {
+      const res = await login({
+        email: fd.get('email'),
+        password: fd.get('password'),
+      })
+      // Handle both { data: {...} } and flat { ...userDetails } response shapes
+      saveUser(res.data || res)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -34,13 +52,15 @@ export default function Login() {
           <form onSubmit={handleSubmit}>
             <div className={s.field}>
               <span className={s.fieldIcon}><MdEmail /></span>
-              <input type="email" placeholder="Enter Email id" className={s.fieldInput} />
+              <input name="email" type="email" required placeholder="Enter Email id" className={s.fieldInput} />
             </div>
 
             <div className={s.field}>
               <span className={s.fieldIcon}><MdLock /></span>
               <input
+                name="password"
                 type={showPw ? 'text' : 'password'}
+                required
                 placeholder="Enter Password"
                 className={s.fieldInput}
                 style={{ paddingRight: 40 }}
@@ -50,14 +70,11 @@ export default function Login() {
               </button>
             </div>
 
-            <div className={ls.rememberRow}>
-              <label className={ls.rememberLabel}>
-                <input type="checkbox" /> Remember me
-              </label>
-              <a href="#" className={ls.forgotLink}>Forgot Password?</a>
-            </div>
+            {error && <p style={{ color: '#e50914', fontSize: 13, margin: '0 0 12px' }}>{error}</p>}
 
-            <button type="submit" className={s.submitBtn}>Submit</button>
+            <button type="submit" className={s.submitBtn} disabled={loading}>
+              {loading ? 'Signing in...' : 'Submit'}
+            </button>
           </form>
 
           <p className={s.bottomLink}>
