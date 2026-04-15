@@ -77,17 +77,6 @@ export default function Rewards({ points, user }) {
         date: new Date().toISOString(),
       })
 
-      // Only save to localStorage and show success after API succeeds
-      const existing = JSON.parse(localStorage.getItem('sf_claims') || '[]')
-      const newClaim = {
-        id: Date.now(),
-        ...form,
-        amount: claiming.amount,
-        points: claiming.points,
-        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-        status: 'pending',
-      }
-      localStorage.setItem('sf_claims', JSON.stringify([...existing, newClaim]))
       setSubmitted(true)
     } catch (err) {
       setSubmitError(err.message || 'Something went wrong. Please try again.')

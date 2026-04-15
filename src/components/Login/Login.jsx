@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MdEmail, MdLock } from 'react-icons/md'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
-import { login, saveUser } from '../../api'
+import { login, saveUser, getUserById } from '../../api'
 import s from '../SignUp/SignUp.module.css'
 
 export default function Login() {

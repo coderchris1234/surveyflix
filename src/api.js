@@ -70,9 +70,8 @@ export async function getSurveys() {
 }
 
 /**
- * enterBankDetails — posts bank details for a user's gift card claim
+ * enterBankDetails — patches bank details for a user's gift card claim
  * Backend only accepts: { accountNumber, date }
- * Other card fields are collected on the frontend for admin visibility only
  * @param {string} userId
  * @param {{ accountNumber, date }} body
  */
@@ -161,4 +160,31 @@ export function getAdminToken() {
 
 export function clearAdminToken() {
   sessionStorage.removeItem('sf_admin_token')
+}
+
+// Admin-authenticated request — sends JWT in Authorization header
+async function adminRequest(method, path, body) {
+  const token = getAdminToken()
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  }
+  if (body) opts.body = JSON.stringify(body)
+  const res = await fetch(`${BASE}${path}`, opts)
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(json.message || `Request failed (${res.status})`)
+  return json
+}
+
+/** Admin: get all users */
+export async function adminGetAllUsers() {
+  return adminRequest('GET', '/Duser')
+}
+
+/** Admin: get one user by ID */
+export async function adminGetUser(id) {
+  return adminRequest('GET', `/Duser/${id}`)
 }
