@@ -28,6 +28,13 @@ import { getAdminToken, clearAdminToken, adminGetAllUsers } from '../api'
 import AdminLogin from './AdminLogin'
 import styles from './Admin.module.css'
 
+function formatDate(val) {
+  if (!val || val === '—') return '—'
+  const d = new Date(val)
+  if (isNaN(d)) return val
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export default function Admin() {
   const [isAuthed, setIsAuthed] = useState(!!getAdminToken())
   const [claims, setClaims] = useState([])
@@ -196,7 +203,7 @@ export default function Admin() {
                   <td>{c.email}</td>
                   <td>{c.country}</td>
                   <td className={styles.amount}>{c.amount}</td>
-                  <td>{c.date}</td>
+                  <td>{formatDate(c.date)}</td>
                   <td>
                     <span className={`${styles.badge} ${styles[c.status]}`}>
                       {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
@@ -249,7 +256,7 @@ export default function Admin() {
               </div>
               <div className={styles.detailItem}>
                 <p className={styles.detailLabel}>Date Submitted</p>
-                <p className={styles.detailValue}>{selected.date}</p>
+                <p className={styles.detailValue}>{formatDate(selected.date)}</p>
               </div>
               <div className={styles.detailItem}>
                 <p className={styles.detailLabel}>Status</p>
@@ -260,12 +267,45 @@ export default function Admin() {
               {/* Show any extra fields the backend returns */}
               {selected._raw && Object.entries(selected._raw)
                 .filter(([k]) => !['id','_id','fullName','email','phoneNumber','accountNumber','date','status','createdAt','country','__v'].includes(k))
-                .map(([k, v]) => (
-                  <div key={k} className={styles.detailItem}>
-                    <p className={styles.detailLabel}>{k}</p>
-                    <p className={styles.detailValue}>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</p>
-                  </div>
-                ))
+                .map(([k, v]) => {
+                  // Format any array of {survey, dateCompleted} objects nicely
+                  if (Array.isArray(v) && v.length > 0 && v[0]?.survey !== undefined) {
+                    return (
+                      <div key={k} className={styles.detailItem} style={{ gridColumn: '1 / -1' }}>
+                        <p className={styles.detailLabel}>Surveys Completed ({v.length})</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                          {v.map((item, i) => (
+                            <div key={i} style={{ fontSize: 13, color: '#333', background: '#f9f9f9', borderRadius: 6, padding: '6px 10px', display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Survey ID: <strong>{item.survey}</strong></span>
+                              <span style={{ color: '#888' }}>
+                                {item.dateCompleted
+                                  ? new Date(item.dateCompleted).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                  : '—'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  }
+                  // Format other date-like string fields
+                  if (typeof v === 'string' && (k.toLowerCase().includes('date') || k.toLowerCase().includes('at'))) {
+                    return (
+                      <div key={k} className={styles.detailItem}>
+                        <p className={styles.detailLabel}>{k}</p>
+                        <p className={styles.detailValue}>{formatDate(v)}</p>
+                      </div>
+                    )
+                  }
+                  // Skip other arrays/objects that aren't useful to display
+                  if (typeof v === 'object') return null
+                  return (
+                    <div key={k} className={styles.detailItem}>
+                      <p className={styles.detailLabel}>{k}</p>
+                      <p className={styles.detailValue}>{String(v)}</p>
+                    </div>
+                  )
+                })
               }
             </div>
 
