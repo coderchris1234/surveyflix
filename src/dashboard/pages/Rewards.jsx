@@ -65,11 +65,8 @@ export default function Rewards({ points, user }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitError('')
-
-    const allFilled = Object.values(form).every(v => v.trim() !== '')
-    if (!allFilled) return
-
     setSubmitting(true)
+
     try {
       const user = getUser()
       const userId = user?.id || user?._id
