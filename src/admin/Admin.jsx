@@ -24,6 +24,8 @@
  *   Replace the localStorage.setItem in updateStatus with nothing (backend handles it)
  */
 import { useState } from 'react'
+import { getAdminToken, clearAdminToken } from '../api'
+import AdminLogin from './AdminLogin'
 import styles from './Admin.module.css'
 
 // Demo data shown when no real user submissions exist in localStorage
@@ -61,7 +63,7 @@ function loadClaims() {
 }
 
 export default function Admin() {
-  // Initialise claims lazily — the function is only called once on first render
+  const [isAuthed, setIsAuthed] = useState(!!getAdminToken())
   const [claims, setClaims] = useState(() => loadClaims())
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
@@ -104,11 +106,27 @@ export default function Admin() {
     rejected: claims.filter(c => c.status === 'rejected').length,
   }
 
+  if (!isAuthed) {
+    return <AdminLogin onSuccess={() => setIsAuthed(true)} />
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
         <div className={styles.logo}>surv<span>e</span>yflix</div>
-        <span className={styles.adminBadge}>Admin Panel</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span className={styles.adminBadge}>Admin Panel</span>
+          <button
+            onClick={() => { clearAdminToken(); setIsAuthed(false) }}
+            style={{
+              background: 'rgba(229,9,20,0.15)', color: '#e50914', border: 'none',
+              borderRadius: 6, padding: '6px 14px', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
       <div className={styles.content}>
