@@ -46,7 +46,8 @@ export default function SignUp() {
 
     const fd = new FormData(e.target)
     const body = {
-      fullName: `${fd.get('firstName')} ${fd.get('lastName')}`.trim(),
+      firstName: fd.get('firstName'),
+      lastName: fd.get('lastName'),
       email: fd.get('email'),
       phoneNumber: `${country.dial}${fd.get('phone')}`,
       password: fd.get('password'),

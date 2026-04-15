@@ -1,10 +1,31 @@
-import { useState, useEffect } from 'react'
+/**
+ * Dashboard.jsx — User dashboard state manager
+ *
+ * Reads the logged-in user from localStorage (saved by Login.jsx).
+ * Redirects to /login if no user is found.
+ *
+ * Holds shared state for all dashboard pages:
+ *   - page:         active tab (overview | surveys | rewards)
+ *   - points:       user's current point balance
+ *   - completedIds: survey IDs the user has already completed
+ *
+ * Points and completedIds are persisted to localStorage per user ID
+ * (key: sf_progress_{userId}) so they survive sign out / sign in.
+ *
+ * The Surveys page calls onEarn(surveyId, pts) when a survey is finished,
+ * which updates points here and flows up to the topbar badge.
+ *
+ * Pages currently active: Overview, Surveys, Rewards
+ * Commented-out pages (uncomment to re-enable):
+ *   History (Points History), Profile (My Profile)
+ */
 import { useNavigate } from 'react-router-dom'
 import { getUser, clearUser, loadProgress, saveProgress } from '../api'
 import DashboardLayout from './layout/DashboardLayout'
 import Overview from './pages/Overview'
 import Surveys from './pages/Surveys'
 import Rewards from './pages/Rewards'
+import { useEffect, useState } from 'react'
 // import History from './pages/History'
 // import Profile from './pages/Profile'
 

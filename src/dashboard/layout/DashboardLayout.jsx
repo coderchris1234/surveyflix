@@ -7,9 +7,11 @@
  *   - Content area where the active page renders via {children}
  *
  * Props:
- *   activePage  — string ID of the current page (used to highlight the active nav item)
- *   onNavigate  — function called when a nav item is clicked, updates page in Dashboard.jsx
+ *   activePage  — string ID of the current page (highlights the active nav item)
+ *   onNavigate  — called when a nav item is clicked, updates page in Dashboard.jsx
  *   points      — current point balance shown in the topbar badge
+ *   user        — logged-in user object (used for name/email in sidebar footer)
+ *   onLogout    — called when Sign Out is clicked (clears session, redirects home)
  *   children    — the active page component rendered inside the content area
  *
  * Mobile behaviour:
