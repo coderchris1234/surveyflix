@@ -69,13 +69,15 @@ export default function DashboardLayout({ activePage, onNavigate, points, user, 
     setDrawerOpen(false)
   }
 
-  // Get initials from user's full name for the avatar circle
-  const initials = user?.fullName
-    ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'U'
+  // Build initials from firstName/lastName (or fullName as fallback)
+  const first = user?.firstName || user?.fullName?.split(' ')[0] || ''
+  const last = user?.lastName || user?.fullName?.split(' ')[1] || ''
+  const initials = `${first[0] || ''}${last[0] || ''}`.toUpperCase() || 'U'
 
-  // Display name — use fullName, fall back to email
-  const displayName = user?.fullName || user?.email || 'User'
+  // Display name — prefer firstName + lastName, fall back to email
+  const displayName = (first || last)
+    ? `${first} ${last}`.trim()
+    : user?.email || 'User'
 
   return (
     <div className={styles.layout}>

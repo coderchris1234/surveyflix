@@ -50,12 +50,14 @@ export default function Rewards({ points, user }) {
 
   // Pre-fill personal details from the logged-in user
   const [form, setForm] = useState({
-    firstName: user?.fullName?.split(' ')[0] || '',
-    lastName: user?.fullName?.split(' ').slice(1).join(' ') || '',
+    firstName: user?.firstName || user?.fullName?.split(' ')[0] || '',
+    lastName: user?.lastName || user?.fullName?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: user?.phoneNumber || '',
     address: '', city: '', country: '',
-    bankName: '', cardNumber: '', expiryDate: '', cardHolder: '', iban: '', cvv: '',
+    bankName: '', cardNumber: '', expiryDate: '',
+    cardHolder: [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.fullName || '',
+    iban: '', cvv: '',
   })
 
   // Generic field updater — returns a change handler for a given key

@@ -11,7 +11,8 @@ A survey panel web application where users answer surveys to earn points and red
 - CSS Modules (scoped styles per component)
 - React Icons (MdEmail, MdLock, HiEye, etc.)
 - flagcdn.com (country flag images via URL)
-- localStorage (temporary data store — no backend yet)
+- localStorage (user session + progress persistence)
+- sessionStorage (admin JWT token)
 
 ---
 
@@ -32,58 +33,107 @@ The app runs at `http://localhost:5173` by default.
 src/
 ├── main.jsx                  # App entry point, sets up BrowserRouter
 ├── App.jsx                   # All route definitions
+├── api.js                    # Central API utility — all fetch calls live here
 ├── index.css                 # Global reset styles only
 │
-├── assets/                   # Static assets (hero.png placeholder)
+├── assets/                   # Static assets
 ├── public/                   # Public images served directly
-│   ├── hero.jpeg             # Hero section background
+│   ├── hero.jpeg             # Hero section + signup/login left panel background
 │   ├── section1.jpeg         # WhyJoin section image
 │   └── section2.jpeg         # ValueOpinion section image
 │
 ├── components/               # Landing page sections
 │   ├── Navbar/               # Top navigation bar (desktop + mobile drawer)
-│   ├── Hero/                 # Full-screen hero with CTA
-│   ├── WhyJoin/              # "Why join our panel" split section
-│   ├── ValueOpinion/         # "We value your opinion" split section
-│   ├── AboutUs/              # About Us cards section
+│   ├── Hero/                 # Full-screen hero with CTA → routes to /signup
+│   ├── WhyJoin/              # "Why join our panel" — CTA routes to /signup
+│   ├── ValueOpinion/         # "We value your opinion" — CTA routes to /login
+│   ├── AboutUs/              # About Us cards section (id="about")
 │   ├── Testimonials/         # User testimonials with country flags
 │   ├── OurFacts/             # Stats + top fan leaderboard
-│   ├── Footer/               # Site footer with links
-│   ├── SignUp/               # Sign up page (also used by Login for shared styles)
+│   ├── Footer/               # Site footer with links + X social link
+│   ├── SignUp/               # Sign up page
 │   └── Login/                # Login page
 │
 ├── dashboard/                # Logged-in user area
-│   ├── Dashboard.jsx         # State manager: points, page, completedIds
+│   ├── Dashboard.jsx         # State manager: user, points, page, completedIds
 │   └── layout/
-│       └── DashboardLayout.jsx  # Sidebar + topbar shell
+│       └── DashboardLayout.jsx  # Sidebar + topbar shell (real user name/email)
 │   └── pages/
-│       ├── Overview.jsx      # Stats, progress bar, recent activity
-│       ├── Surveys.jsx       # Survey cards + interactive modal
-│       ├── Rewards.jsx       # Gift card tiers + claim form
+│       ├── Overview.jsx      # Stats cards, progress bar, recent activity
+│       ├── Surveys.jsx       # Survey cards + interactive modal (API-driven)
+│       ├── Rewards.jsx       # Gift card tiers + claim form → PATCH /Duser/:id
 │       ├── History.jsx       # Points history table (commented out)
 │       └── Profile.jsx       # User profile editor (commented out)
 │
 ├── admin/
-│   └── Admin.jsx             # Admin panel for managing gift card claims
+│   ├── AdminLogin.jsx        # Admin login form → POST /Dladmin (returns JWT)
+│   └── Admin.jsx             # Admin panel — fetches users via GET /Duser with JWT
 │
 └── pages/
     ├── Terms.jsx             # Terms & Conditions page
-    └── NotFound.jsx          # 404 page
+    └── NotFound.jsx          # 404 page (floating astronaut animation)
 ```
 
 ---
 
 ## Routes
 
-| URL          | Page                  | Notes                                      |
-|--------------|-----------------------|--------------------------------------------|
-| `/`          | Landing page          | All marketing sections stacked             |
-| `/signup`    | Sign Up               | Form with validation, routes to /dashboard |
-| `/login`     | Login                 | Routes to /dashboard on submit             |
-| `/dashboard` | User Dashboard        | Overview, Surveys, Gift Cards              |
-| `/terms`     | Terms & Conditions    | Linked from signup checkbox                |
-| `/admin`     | Admin Panel           | No auth guard — add one before production  |
-| `*`          | 404 Not Found         | Catches all unknown URLs                   |
+| URL          | Page                  | Notes                                        |
+|--------------|-----------------------|----------------------------------------------|
+| `/`          | Landing page          | All marketing sections stacked               |
+| `/signup`    | Sign Up               | Sends firstName, lastName, email, phone, password |
+| `/login`     | Login                 | Routes to /dashboard on success              |
+| `/dashboard` | User Dashboard        | Requires user in localStorage                |
+| `/terms`     | Terms & Conditions    | Linked from signup checkbox                  |
+| `/admin`     | Admin Panel           | Protected by admin JWT login                 |
+| `*`          | 404 Not Found         | Catches all unknown URLs                     |
+
+---
+
+## API Endpoints
+
+Base URL: `https://surveyinfrastructure.onrender.com`
+
+| Method  | Path                    | Purpose                              |
+|---------|-------------------------|--------------------------------------|
+| POST    | `/Duser`                | Create user (signup)                 |
+| POST    | `/DLuser`               | Login user → returns user object     |
+| GET     | `/Duser`                | Get all users (admin, JWT required)  |
+| GET     | `/Duser/:id`            | Get one user by ID                   |
+| PATCH   | `/Duser/:id`            | Submit bank/card details for claim   |
+| GET     | `/Dsurvey`              | Get all surveys                      |
+| POST    | `/Dsurvey/:id/:sid`     | Mark survey as completed for a user  |
+| POST    | `/Dladmin`              | Admin login → returns JWT token      |
+
+---
+
+## Signup Request Body
+
+```json
+{
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "phoneNumber": "string",
+  "password": "string"
+}
+```
+
+## Bank Details Request Body (PATCH /Duser/:id)
+
+```json
+{
+  "address": "string",
+  "city": "string",
+  "country": "string",
+  "bankName": "string",
+  "cardHolder": "string",
+  "cardNumber": "string",
+  "expiryDate": "string (MM/YY)",
+  "iban": "string",
+  "cvv": "string"
+}
+```
 
 ---
 
@@ -91,7 +141,7 @@ src/
 
 1. User completes a survey in the Surveys page
 2. `onEarn(surveyId, points)` is called, updating the balance in `Dashboard.jsx`
-3. The new balance is passed to `DashboardLayout` (topbar badge) and `Overview` (progress bar)
+3. Points and completed survey IDs are saved to `localStorage` under `sf_progress_{userId}`
 4. When balance reaches a tier threshold, the Gift Card "Claim Now" button unlocks
 
 Gift card tiers (defined in `Rewards.jsx`):
@@ -103,58 +153,40 @@ Gift card tiers (defined in `Rewards.jsx`):
 
 ## How the Claim Form Works
 
-When a user submits a gift card claim:
+1. User clicks "Claim Now" on an unlocked tier
+2. Fills in personal details, address, and card/bank details (all fields required)
+3. On submit → `PATCH /Duser/:id` sends all card details to the backend
+4. On success → the tier is saved to `localStorage` under `sf_claimed_{userId}`
+5. The "Claim Now" button becomes "✓ Claim Submitted" and is permanently disabled for that tier
 
-1. All form fields are validated (HTML `required` + JS double-check)
-2. The claim object is saved to `localStorage` under the key `sf_claims`
-3. The Admin panel at `/admin` reads from `sf_claims` on load
-4. Admin can Approve or Reject claims — status changes are persisted back to localStorage
-
-Claim object shape:
-```js
-{
-  id: Date.now(),         // unique timestamp ID
-  firstName, lastName,
-  email, phone,
-  address, city, country,
-  bankName, cardHolder,
-  cardNumber, expiryDate,
-  iban, cvv,
-  amount,                 // e.g. "$200"
-  points,                 // e.g. 20000
-  date,                   // formatted date string
-  status,                 // "pending" | "approved" | "rejected"
-}
-```
+The claimed tiers persist across sign out / sign in — a user cannot claim the same tier twice.
 
 ---
 
 ## Admin Panel
 
-Visit `/admin` to see all gift card claims.
+Visit `/admin` to manage users and view gift card claims.
 
-- Click a user's name to open the full detail modal (shows all card details)
-- Use Approve / Reject buttons to update claim status
-- Use the search box to filter by name, email, or country
-- Click ↻ Refresh to reload submissions from localStorage without a page reload
+- Protected by admin login (`POST /Dladmin`) — JWT stored in `sessionStorage`
+- Fetches all users from `GET /Duser` using the JWT in `Authorization: Bearer` header
+- Click a user's name to open the full detail modal (shows all backend fields)
+- Refresh button re-fetches from the API
+- Sign Out clears the JWT and returns to the admin login screen
 
-> There is no login protection on `/admin`. Before going live, add an auth check
-> (e.g. a simple password prompt, or integrate with your backend auth system).
+Currently visible table columns: #, Name, Email
+Commented-out columns (uncomment to enable): Country, Amount, Date, Status, Actions
+Commented-out features (uncomment to enable): Stats bar (total/pending/approved/rejected)
 
 ---
 
-## Data Persistence
+## Session Storage
 
-All data currently lives in the browser's `localStorage`. This means:
-
-- Data is lost if the user clears their browser storage
-- Data does not sync between different browsers or devices
-- The admin and user must be on the same browser/device to share data
-
-**When connecting a real backend**, replace:
-- `localStorage.setItem('sf_claims', ...)` in `Rewards.jsx` → API POST
-- `loadClaims()` in `Admin.jsx` → API GET
-- `updateStatus()` in `Admin.jsx` → API PATCH
+| Key                    | Storage       | Contents                                      |
+|------------------------|---------------|-----------------------------------------------|
+| `sf_user`              | localStorage  | Full user object from login response          |
+| `sf_progress_{uid}`    | localStorage  | `{ points, completedIds }` per user           |
+| `sf_claimed_{uid}`     | localStorage  | Array of claimed gift card amounts per user   |
+| `sf_admin_token`       | sessionStorage| Admin JWT (clears when tab/browser closes)    |
 
 ---
 
@@ -162,8 +194,8 @@ All data currently lives in the browser's `localStorage`. This means:
 
 Two dashboard pages are built but temporarily hidden:
 
-- **Points History** (`src/dashboard/pages/History.jsx`) — table of earned/redeemed points
-- **My Profile** (`src/dashboard/pages/Profile.jsx`) — editable user profile form
+- **Points History** (`src/dashboard/pages/History.jsx`)
+- **My Profile** (`src/dashboard/pages/Profile.jsx`)
 
 To re-enable either:
 1. Uncomment the import in `Dashboard.jsx`
@@ -184,7 +216,6 @@ Place images in the `public/` folder. They are referenced with a leading `/`:
 ```
 
 Country flags are loaded from `https://flagcdn.com/w40/{countryCode}.png`
-(e.g. `https://flagcdn.com/w40/de.png` for Germany).
 
 ---
 
@@ -197,8 +228,6 @@ import styles from './Component.module.css'
 // used as: className={styles.myClass}
 ```
 
-This prevents class name collisions between components. There are no global utility classes.
-
 Breakpoints used:
 - `768px` — tablet/mobile layout changes (stacked sections, mobile nav drawer)
 - `480px` — small phone adjustments (font sizes, grid columns)
@@ -207,19 +236,18 @@ Breakpoints used:
 
 ## Adding New Surveys
 
-Open `src/dashboard/pages/Surveys.jsx` and add an object to the `SURVEYS` array:
+The Surveys page fetches from `GET /Dsurvey`. If the API returns no data, it falls back to `FALLBACK_SURVEYS` in `Surveys.jsx`. To add fallback surveys, add an object to that array:
 
 ```js
 {
-  id: 5,                        // must be unique
+  id: '5',
   title: 'My New Survey',
   category: 'Finance',
   duration: '4 min',
   questions: 4,
-  pointsPerQ: 25,               // points awarded per question answered
+  pointsPerQ: 25,
   qs: [
     { q: 'Question text?', opts: ['Option A', 'Option B', 'Option C', 'Option D'] },
-    // ... more questions
   ],
 }
 ```
@@ -234,15 +262,19 @@ Open `src/dashboard/pages/Rewards.jsx` and add to the `TIERS` array:
 { amount: '$1000', points: 100000, icon: '👑' }
 ```
 
-Also update the Terms page (`src/pages/Terms.jsx`) to reflect the new tier.
+Also update `src/pages/Terms.jsx` to reflect the new tier.
+
+---
+
+## Social
+
+X (Twitter): [@surveyflixusa](https://x.com/surveyflixusa?s=21)
 
 ---
 
 ## Known Limitations / TODO
 
-- No real authentication — login/signup forms navigate directly to dashboard
-- No backend — all data stored in localStorage
-- Admin panel has no access control
-- Points do not persist on page refresh (state resets to INITIAL_POINTS)
-- Survey answers are not stored anywhere
+- No real authentication — login navigates to dashboard without verifying credentials server-side beyond the API call
+- Points do not sync with the backend — stored locally per device
+- Admin Approve/Reject buttons are commented out (no backend endpoint for status updates yet)
 - No email notifications for claim approvals

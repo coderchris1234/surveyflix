@@ -1,8 +1,18 @@
+/**
+ * Login.jsx — User login page
+ *
+ * Sends POST /DLuser with { email, password }.
+ * On success: saves user object to localStorage and routes to /dashboard.
+ * On failure: shows the server's error message in red.
+ *
+ * Shares layout styles with SignUp.jsx (imports SignUp.module.css).
+ * No "Forgot Password" or "Remember Me" — there is no password recovery.
+ */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MdEmail, MdLock } from 'react-icons/md'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
-import { login, saveUser, getUserById } from '../../api'
+import { login, saveUser } from '../../api'
 import s from '../SignUp/SignUp.module.css'
 
 export default function Login() {

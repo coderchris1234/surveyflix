@@ -1,3 +1,19 @@
+/**
+ * Overview.jsx — Dashboard home page
+ *
+ * Shows the user's current stats and progress toward the next gift card:
+ *   - Total Points earned
+ *   - Surveys Done (count from completedIds)
+ *   - Next Reward (next unlocked gift card tier)
+ *   - Progress bar toward the next tier with milestone badges
+ *   - Recent Activity list (currently empty — to be populated from backend)
+ *
+ * Props:
+ *   points       — current point balance
+ *   completedIds — array of completed survey IDs (used for Surveys Done count)
+ *
+ * GIFT_TIERS must match the tiers defined in Rewards.jsx.
+ */
 import styles from './Overview.module.css'
 
 const GIFT_TIERS = [

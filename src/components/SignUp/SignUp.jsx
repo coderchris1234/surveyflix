@@ -1,3 +1,20 @@
+/**
+ * SignUp.jsx — User registration page
+ *
+ * Collects: firstName, lastName, email, phoneNumber (dial code + number), password
+ * Sends POST /Duser on submit.
+ *
+ * On success:
+ *   1. Saves user object to localStorage via saveUser()
+ *   2. Shows a password reminder modal (no recovery exists on this platform)
+ *   3. "OK, I've saved my password" button routes to /login
+ *
+ * Phone field has a country picker (flag + dial code) for US, Canada,
+ * Nigeria, and all European countries.
+ * Password field has show/hide toggle and autoComplete="new-password"
+ * to prompt the browser to offer to save the password.
+ * Terms & Conditions checkbox is required — links to /terms.
+ */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MdEmail, MdLock, MdPerson } from 'react-icons/md'
