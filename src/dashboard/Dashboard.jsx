@@ -32,7 +32,8 @@ import { useEffect, useState } from 'react'
 export default function Dashboard() {
   const navigate = useNavigate()
   const user = getUser()
-  const uid = user?.id || user?._id || user?.email
+  // Backend uses _id (MongoDB ObjectId)
+  const uid = user?._id || user?.id || user?.email
 
   const saved = uid ? loadProgress(uid) : { points: 0, completedIds: [] }
 

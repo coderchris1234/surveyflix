@@ -32,8 +32,10 @@ export default function Login() {
         email: fd.get('email'),
         password: fd.get('password'),
       })
-      // Handle both { data: {...} } and flat { ...userDetails } response shapes
-      saveUser(res.data || res)
+      // Backend returns an array — unwrap the first element
+      const raw = res.data || res
+      const userData = Array.isArray(raw) ? raw[0] : raw
+      saveUser(userData)
       navigate('/dashboard')
     } catch (err) {
       setError(err.message)

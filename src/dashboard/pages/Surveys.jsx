@@ -126,8 +126,9 @@ export default function Surveys({ onEarn, completedIds }) {
       setSelected(null)
     } else {
       const user = getUser()
-      if (user?.id) {
-        completeSurvey(user.id, active.id).catch(() => {})
+      const userId = user?._id || user?.id
+      if (userId) {
+        completeSurvey(userId, active.id).catch(() => {})
       }
       // Total points = pointsPerQ × number of questions
       const pts = (active.pointsPerQ || 5) * (active.qs?.length || active.questions || 1)

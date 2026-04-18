@@ -33,7 +33,7 @@ const TIERS = [
 ]
 
 export default function Rewards({ points, user }) {
-  const uid = user?.id || user?._id || user?.email
+  const uid = user?._id || user?.id || user?.email
 
   // Persist claimed tiers per user so they can't re-claim after refresh or re-login
   const storageKey = uid ? `sf_claimed_${uid}` : 'sf_claimed'
@@ -71,7 +71,7 @@ export default function Rewards({ points, user }) {
 
     try {
       const user = getUser()
-      const userId = user?.id || user?._id
+      const userId = user?._id || user?.id
       if (!userId) throw new Error('User session expired. Please log in again.')
 
       // Send all fields to the backend

@@ -69,15 +69,14 @@ export default function DashboardLayout({ activePage, onNavigate, points, user, 
     setDrawerOpen(false)
   }
 
-  // Build initials from firstName/lastName (or fullName as fallback)
+  // Build initials and display name from firstName/lastName (backend fields)
+  // Falls back to fullName or email if those aren't present
   const first = user?.firstName || user?.fullName?.split(' ')[0] || ''
   const last = user?.lastName || user?.fullName?.split(' ')[1] || ''
-  const initials = `${first[0] || ''}${last[0] || ''}`.toUpperCase() || 'U'
-
-  // Display name — prefer firstName + lastName, fall back to email
+  const initials = `${first[0] || ''}${last[0] || ''}`.toUpperCase() || (user?.email?.[0] || 'U').toUpperCase()
   const displayName = (first || last)
     ? `${first} ${last}`.trim()
-    : user?.email || 'User'
+    : user?.fullName || user?.email || 'User'
 
   return (
     <div className={styles.layout}>
