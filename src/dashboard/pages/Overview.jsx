@@ -29,8 +29,12 @@ export default function Overview({ points, completedIds }) {
   const nextTier = GIFT_TIERS.find(t => t.points > points) || GIFT_TIERS[GIFT_TIERS.length - 1]
   const prevTier = GIFT_TIERS.filter(t => t.points <= points).pop()
   const base = prevTier ? prevTier.points : 0
-  const pct = Math.min(((points - base) / (nextTier.points - base)) * 100, 100)
+  const range = nextTier.points - base
+  // Guard against division by zero (all tiers unlocked)
+  const pct = range > 0 ? Math.min(((points - base) / range) * 100, 100) : 100
 
+  // Ensure at least 2px is visible so users can see the bar is active
+  const displayPct = pct > 0 && pct < 1 ? 1 : pct
   const surveysDone = completedIds?.length ?? 0
 
   return (
@@ -61,7 +65,7 @@ export default function Overview({ points, completedIds }) {
           <span className={styles.progressTarget}>{points.toLocaleString()} / {nextTier.points.toLocaleString()} pts</span>
         </div>
         <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+          <div className={styles.progressFill} style={{ width: `${displayPct}%` }} />
         </div>
         <div className={styles.progressLabels}>
           <span>{base.toLocaleString()} pts</span>
