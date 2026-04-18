@@ -298,3 +298,8 @@
 @media (max-width: 400px) {
   .row { grid-template-columns: 1fr; }
 }
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
