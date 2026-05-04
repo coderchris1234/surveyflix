@@ -4,7 +4,7 @@
  * All fetch calls go through here. Import the functions you need
  * in any component instead of writing fetch() directly.
  *
- * Base URL: https://surveyinfrastructure.onrender.com
+ * Base URL: https://surveyinfrastructure-xcer.onrender.com
  * Change BASE if the backend URL changes.
  *
  * Endpoints used:
@@ -24,7 +24,7 @@
  *   sf_admin_token       — admin JWT (sessionStorage, clears on tab close)
  */
 
-const BASE = 'https://surveyinfrastructure.onrender.com'
+const BASE = 'https://surveyinfrastructure-xcer.onrender.com'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

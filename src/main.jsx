@@ -18,7 +18,7 @@ import App from './App.jsx'
 
 // Wake up the Render server immediately — free tier spins down after inactivity
 // This runs silently in the background so the server is warm when the user submits a form
-fetch('https://surveyinfrastructure.onrender.com/Dsurvey').catch(() => {})
+fetch('https://surveyinfrastructure-xcer.onrender.com/Dsurvey').catch(() => {})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
